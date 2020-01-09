@@ -1,0 +1,138 @@
+@import '../theme/variable';
+@import 'variables';
+
+.login-box {
+    width: 500px;
+
+    @media (max-width: 767px) {
+        width: 90%;
+    }
+}
+
+.topbar {
+    .top-navbar {
+        .navbar-header {
+            background-color: $white;
+            line-height: 69px;
+        }
+    }
+
+    ul.dropdown-user {
+        width: 300px;
+
+        @media (max-width: 767px) {
+            width: 100%;
+        }
+    }
+}
+
+.search-box {
+    .app-search {
+        input {
+            height: 72px;
+        }
+    }
+}
+
+.table.dataTable {
+    thead {
+        .sorting:before, .sorting_asc:before, .sorting_desc:before {
+            content: "";
+        }
+
+        .sorting_asc:after, .sorting_desc:after {
+            opacity: 1;
+        }
+    }
+}
+
+.dataTables_wrapper {
+    > .dt-buttons {
+        .btn {
+            padding: 7px 15px;
+            background-color: $themecolor;
+            color: $white;
+            border: 0;
+
+            &.btn-new {
+                background-color: $success;
+            }
+        }
+
+        .dt-button-collection {
+            width: 100%;
+
+            .dropdown-menu {
+                padding: 0;
+            }
+
+            .buttons-columnVisibility {
+                background-color: $muted;
+
+                &.active {
+                    background-color: $themecolor;
+                }
+
+                &:hover {
+                    background-color: $inverse;
+                }
+            }
+        }
+    }
+
+    .dataTables_processing {
+        z-index: 1000;
+    }
+
+    .dataTables_scrollHead {
+        thead {
+            tr {
+                background-color: $themecolor;
+                color: $white;
+            }
+        }
+
+        table.table-bordered {
+            border-color: $themecolor;
+        }
+    }
+
+    .dataTables_paginate {
+        .paginate_button {
+            > a {
+                border-radius: 0;
+            }
+        }
+    }
+
+    @media screen and (max-width: 767px) {
+        .dataTables_filter {
+            width: 100%;
+        }
+    }
+}
+
+.col-action {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle !important;
+    width: 100px;
+
+    form {
+        display: inline;
+        color: $white;
+    }
+
+    .btn {
+        cursor: pointer;
+    }
+}
+
+.form-material {
+    .form-control {
+        &::placeholder {
+            color: $muted;
+            opacity: 1; /* Firefox */
+        }
+    }
+}

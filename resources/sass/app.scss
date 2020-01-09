@@ -1,0 +1,36 @@
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+// Datatables
+@import '~datatables.net-bs4/css/dataTables.bootstrap4.css';
+@import '~datatables.net-buttons-bs4/css/buttons.bootstrap4.css';
+@import '~datatables.net-fixedcolumns-bs4/css/fixedColumns.bootstrap4.css';
+@import '~datatables.net-responsive-bs4/css/responsive.bootstrap4.css';
+// Sweetalert 2
+@import '~sweetalert2/dist/sweetalert2.css';
+// Toastr
+@import '~toastr/toastr';
+// Dropify
+@import '~dropify/dist/css/dropify.min.css';
+
+// Theme base
+@import 'theme/variable';
+@import 'theme/main';
+@import 'theme/pages';
+@import 'theme/sidebar';
+@import 'theme/css/icons/font-awesome/css/fontawesome-all.css';
+@import 'theme/css/icons/simple-line-icons/css/simple-line-icons.css';
+@import 'theme/css/icons/weather-icons/css/weather-icons.min.css';
+@import 'theme/css/icons/linea-icons/linea.css';
+@import 'theme/css/icons/themify-icons/themify-icons.css';
+@import 'theme/css/icons/flag-icon-css/flag-icon.min.css';
+@import "theme/css/icons/material-design-iconic-font/css/materialdesignicons.min.css";
+@import 'theme/widgets';
+@import 'theme/grid';
+@import 'theme/responsive';
+@import 'theme/material';
+@import 'theme/css/spinners.css';
+@import 'theme/css/animate.css';
+// Theme color
+@import 'theme/colors/blue';
+// Main Customize
+@import 'app/main';
