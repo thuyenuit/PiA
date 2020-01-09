@@ -24,7 +24,7 @@ class CustomFieldGroupsController extends Controller
      */
     public function index(Request $request)
     {
-        $language = App::getLocale();
+        //$language = App::getLocale();
         $datas = CustomFieldGroup::latest()->select('id', "label_locale", 'sequence')->get();
        
         if ($request->ajax()) {
@@ -32,7 +32,6 @@ class CustomFieldGroupsController extends Controller
             return DataTables::of($datas)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    //$btnShow = CommonHelper::generateButtonShow(route('groups.show', $row));
                     $btnEdit = CommonHelper::generateButtonEdit(route('customfieldgroups.edit', $row));
                     $btnDelete = CommonHelper::generateButtonDelete(route('customfieldgroups.destroy', $row));
                     return $btnEdit . $btnDelete;
@@ -54,7 +53,7 @@ class CustomFieldGroupsController extends Controller
     }
 
     /**
-     * Show the form for creating a new club.
+     * Show the form for creating a new custom field group.
      *
      * @return Response
      */
@@ -81,7 +80,7 @@ class CustomFieldGroupsController extends Controller
     }
 
     /**
-     * Store a newly created group in storage.
+     * Store a newly created custom field group in storage.
      *
      * @param CustomFieldGroupStoreRequest $request
      * @return Response
@@ -101,7 +100,7 @@ class CustomFieldGroupsController extends Controller
     }
 
     /**
-     * Show the form for editing the specified club.
+     * Show the form for editing the specified custom field group.
      *
      * @param int $id
      * @return Response
@@ -128,7 +127,7 @@ class CustomFieldGroupsController extends Controller
     }
 
     /**
-     * Update the specified club in storage.
+     * Update the specified custom field group in storage.
      *
      * @param CustomFieldGroupStoreRequest $request
      * @param int $id
@@ -144,7 +143,7 @@ class CustomFieldGroupsController extends Controller
     }
 
     /**
-     * Remove the specified club from storage.
+     * Remove the specified custom field group from storage.
      *
      * @param int $id
      * @return Response

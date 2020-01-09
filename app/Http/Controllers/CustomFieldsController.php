@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomFieldGroupStoreRequest;
 use App\Models\CustomField;
+use App\Models\CustomFieldGroup;
 use App\Helpers\CommonHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Arr;
 use Exception;
 
 class CustomFieldsController extends Controller
@@ -60,7 +62,38 @@ class CustomFieldsController extends Controller
      */
     public function create()
     {
-        //
+        $breadcrumbs = [
+            'title' => __('custom_fields.breadcrumbs.create'),
+            'links' => [
+                [
+                    'text' => __('layouts.sidebar.settings.custom_fields'),
+                    'active' => false,
+                    'href' => route('customfields.index'),
+                ],
+                [
+                    'text' => __('custom_fields.breadcrumbs.create'),
+                    'active' => true,
+                ],
+            ]
+        ];
+
+        $customfield = new CustomField();     
+        $customfieldgroups = CustomFieldGroup::select('id', "label_locale")->get();
+        $arraycfgs = collect([]); 
+        foreach($customfieldgroups as $item)
+        {
+            $arraycfgs->push(['key' => $item->id, 'value' => $item->label_locale]);
+        }
+        $arrayfieldtypes = collect([]); 
+        $arrayfieldtypes->push(['key' => 0, 'value' => 'String']);
+        $arrayfieldtypes->push(['key' => 1, 'value' => 'Number']);
+        $arrayfieldtypes->push(['key' => 2, 'value' => 'Boolean']);
+        $arrayfieldtypes->push(['key' => 3, 'value' => 'Date']);
+        $arrayfieldtypes->push(['key' => 4, 'value' => 'Single Choice']);
+        $arrayfieldtypes->push(['key' => 5, 'value' => 'Multiple Choice']);
+        $arrayfieldtypes->push(['key' => 6, 'value' => 'Data Source']);
+
+        return view('custom_fields.create', compact('breadcrumbs', 'customfield', 'arraycfgs', 'arrayfieldtypes'));
     }
 
     /**
