@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CustomField extends Model
+class FieldGroup extends Model
 {
     public $timestamps = true;
 
@@ -13,7 +13,7 @@ class CustomField extends Model
      *
      * @var string
      */
-    protected $table = 'custom_fields';
+    protected $table = 'field_groups';
 
     /**
      * The database primary key value.
@@ -29,28 +29,16 @@ class CustomField extends Model
      */
     protected $fillable = [
         'name', 
-        'custom_field_group_id',
         'label_locale',
-        'field_type',
-        'sequence', 
-        'mandatory',
-        'active',
-        'show_in_report',
-        'show_in_portal',
-        'setting'
+        'sequence'
     ];
 
     protected $casts = [
         'permissions' => 'array',
     ];
 
-    public function custom_field_group()
+    public function custom_fields()
     {
-        return $this->belongsTo('App\Models\CustomFieldGroup');
-    }
-
-    public function custom_field_members()
-    {
-        return $this->hasMany('App\Models\CustomField');
+        return $this->hasMany('App\Models\Field');
     }
 }
