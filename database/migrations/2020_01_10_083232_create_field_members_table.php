@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCustomFieldMembersTable extends Migration
+class CreateFieldMembersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class CreateCustomFieldMembersTable extends Migration
      */
     public function up()
     {
-        Schema::create('custom_field_members', function (Blueprint $table) {
+        Schema::create('field_members', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->integer('custom_field_id');
+            $table->integer('field_id');
             $table->integer('member_id');
             $table->timestamps();
         });
@@ -28,6 +28,6 @@ class CreateCustomFieldMembersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('custom_field_members');
+        Schema::dropIfExists('field_members');
     }
 }

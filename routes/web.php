@@ -37,11 +37,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('statistics/member', 'StatisticsController@member')->name('statistics.member');
     Route::get('statistics/payment', 'StatisticsController@payment')->name('statistics.payment');
 
-    // Custom Field Groups management
-    Route::resource('customfieldgroups', 'CustomFieldGroupsController');
+    // Field Groups management
+    Route::resource('fieldgroups', 'FieldGroupsController');
     
-    // Custom Fields management
-    Route::resource('customfields', 'CustomFieldsController');
+    // Fields management
+    Route::resource('fields', 'FieldsController');
 
     // Groups management
     Route::resource('groups', 'GroupsController');

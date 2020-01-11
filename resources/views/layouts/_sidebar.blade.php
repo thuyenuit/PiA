@@ -69,13 +69,13 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('customfieldgroups.index') }}">
-                                @lang('layouts.sidebar.settings.custom_field_groups')
+                            <a href="{{ route('fieldgroups.index') }}">
+                                @lang('layouts.sidebar.settings.field_groups')
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('customfields.index') }}">
-                                @lang('layouts.sidebar.settings.custom_fields')
+                            <a href="{{ route('fields.index') }}">
+                                @lang('layouts.sidebar.settings.fields')
                             </a>
                         </li>
                         <li>

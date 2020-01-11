@@ -25,8 +25,8 @@ return [
         'settings' => [
             'group_name' => 'Settings',
             'logo_icon' => 'Logo & Icon',
-            'custom_field_groups' => 'Custom Field Groups',
-            'custom_fields' => 'Custom Fields',
+            'field_groups' => 'Field Groups',
+            'fields' => 'Fields',
             'groups' => 'Groups',
             'payment_methods' => 'Payment Methods',
             'translations' => 'Translations',

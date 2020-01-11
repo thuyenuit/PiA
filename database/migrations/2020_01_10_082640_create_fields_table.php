@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCustomFieldsTable extends Migration
+class CreateFieldsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,10 @@ class CreateCustomFieldsTable extends Migration
      */
     public function up()
     {
-        Schema::create('custom_fields', function (Blueprint $table) {
+        Schema::create('fields', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->integer('custom_field_group_id');
+            $table->integer('field_group_id');
             $table->string('label_locale');
             $table->integer('field_type')->default(0);
             $table->integer('sequence');
@@ -36,6 +36,6 @@ class CreateCustomFieldsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('custom_fields');
+        Schema::dropIfExists('fields');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Arr;
+use PhpParser\Node\Expr\ArrayItem;
 use Spatie\TranslationLoader\LanguageLine;
 
 class CommonHelper
@@ -127,6 +128,24 @@ class CommonHelper
             }
         }
         return $newKeys;
+    }
+
+     /**
+     * Flatten keys of translation data
+     *
+     * @return array collection
+     */
+    public static function collectionFieldType()
+    {
+        $arrayfieldtypes = collect([]); 
+        $arrayfieldtypes->push(['key' => 0, 'value' => 'String']);
+        $arrayfieldtypes->push(['key' => 1, 'value' => 'Number']);
+        $arrayfieldtypes->push(['key' => 2, 'value' => 'Boolean']);
+        $arrayfieldtypes->push(['key' => 3, 'value' => 'Date']);
+        $arrayfieldtypes->push(['key' => 4, 'value' => 'Single Choice']);
+        $arrayfieldtypes->push(['key' => 5, 'value' => 'Multiple Choice']);
+        $arrayfieldtypes->push(['key' => 6, 'value' => 'Data Source']);
+        return $arrayfieldtypes;
     }
 
     /**

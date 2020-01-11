@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
 
-class CustomFieldGroupStoreRequest extends FormRequest
+class FieldStoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,8 +26,11 @@ class CustomFieldGroupStoreRequest extends FormRequest
     {
         $id = Request::instance()->id;
         return [
+            'name' => 'required|max:191',
             'label_locale' => 'required|max:191',
-            'sequence' => 'required',
+            'field_group' => 'required|integer',
+            'field_type' => 'required|integer',
+            'sequence' => 'required|integer',
         ];
     }
 }

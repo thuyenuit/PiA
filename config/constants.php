@@ -23,7 +23,8 @@ return [
         'home',
         'translations',
         'members',
-        'custom_field_groups'
+        'field_groups',
+        'fields'
     ],
     'CONFIG_KEY' => [
         'SITE_LOGO' => 'site_logo',

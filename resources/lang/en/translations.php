@@ -12,7 +12,8 @@ return [
         'home' => 'Home',
         'translations' => 'Translations',
         'members' => 'Members',
-        'custom_field_groups' => 'Custom Field Groups',
+        'field_groups' => 'Field Groups',
+        'fields' => 'Fields',
     ],
     'flash_messages' => [
         'created' => 'Language is created successfully',
