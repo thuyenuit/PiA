@@ -26,12 +26,7 @@
                     @lang('validation.attributes.field_group')
                     <span class="text-danger">*</span>
                 </label>
-                <select name="field_group"  class="form-control">
-                    <option value> @lang('validation.attributes.choose_select_tag')</option>
-                    @foreach($array_field_groups as $item)                                      
-                        <option value="{{$item['key']}}" {{($field->field_group_id == $item['key']) ? "selected" : "" }}>{{$item['value']}}</option>
-                    @endforeach
-                </select>
+                {!! Form::select('field_group', $array_field_groups, $field->field_group_id, ['class' => 'form-control', 'placeholder' => '--Choose--']) !!}
                 {!! $errors->first('field_group', '<p class="text-danger">:message</p>') !!}
             </div>
 
@@ -40,11 +35,7 @@
                     @lang('validation.attributes.field_type')
                     <span class="text-danger">*</span>
                 </label>
-                <select name="field_type" class="form-control" onchange="onChangeFieldType(this)">
-                    @foreach($array_field_types as $item)
-                        <option value="{{$item['key']}}" {{($field->field_type == $item['key']) ? "selected" : "" }}>{{$item['value']}}</option>
-                    @endforeach
-                </select>
+                {!! Form::select('field_type', $array_field_types, $field->field_type, ['class' => 'form-control', 'onchange' => 'onChangeFieldType(this)']) !!}             
                 {!! $errors->first('field_type', '<p class="text-danger">:message</p>') !!}
             </div>
 
@@ -93,21 +84,24 @@
         <div class="form-material row">
             
             <div class="col-md-6 m-t-20">
-                <input type="checkbox" class="check" name="mandatory" id="mandatory" {{($field->mandatory) ? "checked='checked'" : "" }}>
+                {!! Form::checkbox('mandatory', null, (($field->mandatory) ? true : false), ['class' => 'check', 'id' => 'mandatory']) !!}
+                <!-- <input type="checkbox" class="check" name="mandatory" id="mandatory" {{($field->mandatory) ? "checked='checked'" : "" }}> -->
                 <label for="mandatory">
                     @lang('validation.attributes.mandatory')
                 </label>
             </div>
 
             <div class="col-md-6 m-t-20">
-                <input type="checkbox" class="check" name="show_in_report" id="show_in_report" {{isset($field->id) ? (($field->show_in_report) ? "checked='checked'" : "") : "checked='checked'" }}>
+                {!! Form::checkbox('show_in_report', null, (($field->show_in_report) ? true : false), ['class' => 'check', 'id' => 'show_in_report']) !!}
+                <!-- <input type="checkbox" class="check" name="show_in_report" id="show_in_report" {{isset($field->id) ? (($field->show_in_report) ? "checked='checked'" : "") : "checked='checked'" }}> -->
                 <label for="show_in_report">
                     @lang('validation.attributes.show_in_report')
                 </label>
             </div>
 
             <div class="col-md-6 m-t-20">
-                <input type="checkbox" class="check" name="show_in_portal" id="show_in_portal" {{isset($field->id) ? (($field->show_in_portal) ? "checked='checked'" : "") : "checked='checked'" }}>
+                {!! Form::checkbox('show_in_portal', null, (($field->show_in_portal) ? true : false), ['class' => 'check', 'id' => 'show_in_portal']) !!}
+                <!-- <input type="checkbox" class="check" name="show_in_portal" id="show_in_portal" {{isset($field->id) ? (($field->show_in_portal) ? "checked='checked'" : "") : "checked='checked'" }}> -->
                 <label for="show_in_portal">
                     @lang('validation.attributes.show_in_portal')                   
                 </label>

@@ -94,17 +94,14 @@ class FieldsController extends Controller
             ]
         ];
 
-        $field = new FieldViewModel();     
-        $fieldgroups = FieldGroup::select('id', "label_locale", 'sequence')
+        $field = new FieldViewModel();   
+        $field->show_in_portal = true;
+        $field->show_in_report = true;  
+        $array_field_groups = FieldGroup::select('id', "label_locale", 'sequence')
                                         ->orderBy('sequence')
                                         ->orderBy('label_locale')
-                                        ->get();
-        $array_field_groups = collect([]); 
-        foreach($fieldgroups as $item)
-        {
-            $array_field_groups->push(['key' => $item->id, 'value' => $item->label_locale]);
-        }
-        $array_field_types = CommonHelper::collectionFieldType(); 
+                                        ->pluck('label_locale', 'id')->toArray(); 
+        $array_field_types = CommonHelper::collectionFieldType()->pluck('value', 'key')->toArray(); 
         return view('fields.create', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
 
@@ -129,7 +126,7 @@ class FieldsController extends Controller
         $show_in_report = $request['show_in_report'] == 'on' ? true : false;      
         $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;   
         $setting = [];
-     
+        
         switch($field_type)
         {
             case 0:
@@ -247,16 +244,11 @@ class FieldsController extends Controller
             break;
         }
        
-        $fieldgroups = FieldGroup::select('id', "label_locale", 'sequence')
+        $array_field_groups = FieldGroup::select('id', "label_locale", 'sequence')
                                         ->orderBy('sequence')
                                         ->orderBy('label_locale')
-                                        ->get();
-        $array_field_groups = collect([]); 
-        foreach($fieldgroups as $item)
-        {
-            $array_field_groups->push(['key' => $item->id, 'value' => $item->label_locale]);
-        }
-        $array_field_types = CommonHelper::collectionFieldType(); 
+                                        ->pluck('label_locale', 'id')->toArray(); 
+        $array_field_types = CommonHelper::collectionFieldType()->pluck('value', 'key')->toArray(); 
         return view('fields.edit', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
 
@@ -282,7 +274,6 @@ class FieldsController extends Controller
         $show_in_report = $request['show_in_report'] == 'on' ? true : false;      
         $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;   
         $setting = [];
-
         switch($field_type)
         {
             case 0:
