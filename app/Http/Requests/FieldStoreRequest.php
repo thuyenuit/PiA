@@ -26,8 +26,8 @@ class FieldStoreRequest extends FormRequest
     {
         $id = Request::instance()->id;
         return [
-            'name' => 'required|max:191',
-            'label_locale' => 'required|max:191',
+            'name' => 'required|max:191|unique:fields,name,' . $id . ',id',
+            'label_locale' => 'required|max:191|unique:fields,label_locale,' . $id . ',id',
             'field_group' => 'required|integer',
             'field_type' => 'required|integer',
             'sequence' => 'required|integer',

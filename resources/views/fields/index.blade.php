@@ -12,6 +12,7 @@
                         <th>@lang('validation.attributes.name')</th>
                         <th>@lang('validation.attributes.label_locale')</th>
                         <th>@lang('validation.attributes.field_group')</th>
+                        <th>@lang('validation.attributes.mandatory')</th>
                         <th class="col-action">@lang('validation.attributes.action')</th>
                     </tr>
                     </thead>
@@ -33,6 +34,7 @@
                     {data: 'field_name', name: 'field_name', },
                     {data: 'label_locale', name: 'label_locale'},
                     {data: 'field_group_name', name: 'field_group_name', className: 'text-center'},
+                    {data: 'mandatory', name: 'mandatory', className: 'text-center'},
                     {data: 'action', name: 'action', orderable: false, searchable: false, className: 'col-action'},
                 ],
                 //order: [[3, 'asc']], // field_group_name
@@ -57,5 +59,23 @@
             let options = Object.assign({}, datatablesOptions(), columnOptions, buttonOptions, datatablesLanguage());
             $('.data-table').DataTable(options);
         });
+
+        function confirmSwitchMandatory(event, element, mandatory) {
+            event.preventDefault();
+
+            Swal.fire({
+                    title: mandatory == 1 ? '@lang('fields.index.switch_unmandatory')' : '@lang('fields.index.switch_mandatory')',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#1e88e5',
+                    cancelButtonColor: '#fc4b6c',
+                    confirmButtonText: '@lang('layouts.buttons.confirm')',
+                    cancelButtonText: '@lang('layouts.buttons.cancel')',
+                }).then((result) => {
+                    if (result.value) {
+                        $(element).parent('form').submit();
+                    }
+                })  
+        }
     </script>
 @endsection

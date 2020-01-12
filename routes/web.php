@@ -42,6 +42,7 @@ Route::group(['middleware' => ['auth']], function () {
     
     // Fields management
     Route::resource('fields', 'FieldsController');
+    Route::post('fields/{id}/mandatory', 'FieldsController@updateMandatory')->name('fields.mandatory');
 
     // Groups management
     Route::resource('groups', 'GroupsController');

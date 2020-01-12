@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\FieldGroupStoreRequest;
 use App\Models\Field;
 use App\Models\FieldViewModel;
 use App\Models\FieldGroup;
-use App\Models\Language;
 use App\Helpers\CommonHelper;
 use App\Http\Requests\FieldStoreRequest;
 use Illuminate\Http\Request;
@@ -26,16 +24,17 @@ class FieldsController extends Controller
      * @throws Exception
      */
     public function index(Request $request)
-    {
-        
+    {  
         if ($request->ajax()) {
             $data = Field::select('fields.id', 
                                     'fields.name as field_name',
                                     'fields.label_locale as label_locale',
                                     'field_groups.label_locale as field_group_name',
                                     'fields.sequence as field_sequence',
-                                    'field_groups.sequence as field_group_sequence')
+                                    'field_groups.sequence as field_group_sequence',
+                                    'fields.mandatory')
                                 ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
+                                ->where('active', true)
                                 ->orderBy('field_group_sequence')
                                 ->orderBy('field_group_name')
                                 ->orderBy('field_sequence')
@@ -49,6 +48,14 @@ class FieldsController extends Controller
                     $btnDelete = CommonHelper::generateButtonDelete(route('fields.destroy', $row));
                     return $btnEdit . $btnDelete;
                 })
+                ->addColumn('mandatory', function ($row) {
+                    $switchChecked = $row->mandatory ? 'checked' : '';
+                    $switch = "<label><input type='checkbox' $switchChecked><span class='lever switch-col-blue'></span></label>";              
+                    $url = route('fields.mandatory', $row);
+                    $button = "<a onclick='confirmSwitchMandatory(event, this, {$row->mandatory})'>$switch</a>";
+                    return "<div class='switch'><form method='POST' action='$url' class='ml-1'>" . csrf_field() . $button . "</form></div>";
+                })
+                ->rawColumns(['action', 'mandatory'])
                 ->make(true);
         }
 
@@ -87,18 +94,18 @@ class FieldsController extends Controller
             ]
         ];
 
-        $customfield = new FieldViewModel();     
-        $customfieldgroups = FieldGroup::select('id', "label_locale", 'sequence')
+        $field = new FieldViewModel();     
+        $fieldgroups = FieldGroup::select('id', "label_locale", 'sequence')
                                         ->orderBy('sequence')
                                         ->orderBy('label_locale')
                                         ->get();
-        $arraycfgs = collect([]); 
-        foreach($customfieldgroups as $item)
+        $array_field_groups = collect([]); 
+        foreach($fieldgroups as $item)
         {
-            $arraycfgs->push(['key' => $item->id, 'value' => $item->label_locale]);
+            $array_field_groups->push(['key' => $item->id, 'value' => $item->label_locale]);
         }
-        $arrayfieldtypes = CommonHelper::collectionFieldType(); 
-        return view('fields.create', compact('breadcrumbs', 'customfield', 'arraycfgs', 'arrayfieldtypes'));
+        $array_field_types = CommonHelper::collectionFieldType(); 
+        return view('fields.create', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
 
     /**
@@ -186,17 +193,6 @@ class FieldsController extends Controller
     }
 
     /**
-     * Display the specified field.
-     *
-     * @param int $id
-     * @return Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified field.
      *
      * @param int $id
@@ -204,19 +200,156 @@ class FieldsController extends Controller
      */
     public function edit($id)
     {
-        //
+        $breadcrumbs = [
+            'title' => __('fields.breadcrumbs.edit'),
+            'links' => [
+                [
+                    'text' => __('layouts.sidebar.settings.fields'),
+                    'active' => false,
+                    'href' => route('fields.index'),
+                ],
+                [
+                    'text' => __('fields.breadcrumbs.edit'),
+                    'active' => true,
+                ],
+            ]
+        ];
+
+        $fieldDB = Field::findOrFail($id); 
+        $field = new FieldViewModel();     
+        $field->id = $fieldDB->id;
+        $field->name = $fieldDB->name;
+        $field->label_locale = $fieldDB->label_locale;
+        $field->field_group_id = $fieldDB->field_group_id;
+        $field->field_type = $fieldDB->field_type;
+        $field->sequence = $fieldDB->sequence;
+        $field->mandatory = $fieldDB->mandatory;
+        $field->show_in_report = $fieldDB->show_in_report;
+        $field->show_in_portal = $fieldDB->show_in_portal;
+        $objSetting = json_decode($fieldDB->setting);
+
+        switch($field->field_type)
+        {
+            case 0:
+                $field->default_value = $objSetting->default_value;
+                $field->max_length = $objSetting->max_length;
+            break;
+            case 4: case 5:           
+                $objItems = json_decode($objSetting->items);
+                $field->default_value = $objSetting->default_value;
+                $field->items = implode (",", $objItems);
+            break;
+            case 1: case 2: case 3:
+                $field->default_value = $objSetting->default_value;
+            break;
+            case 6:
+                $field->default_value = $objSetting->data_source;
+            break;
+        }
+       
+        $fieldgroups = FieldGroup::select('id', "label_locale", 'sequence')
+                                        ->orderBy('sequence')
+                                        ->orderBy('label_locale')
+                                        ->get();
+        $array_field_groups = collect([]); 
+        foreach($fieldgroups as $item)
+        {
+            $array_field_groups->push(['key' => $item->id, 'value' => $item->label_locale]);
+        }
+        $array_field_types = CommonHelper::collectionFieldType(); 
+        return view('fields.edit', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
 
     /**
      * Update the specified field in storage.
      *
-     * @param Request $request
+     * @param FieldStoreRequest $request
      * @param int $id
      * @return Response
      */
-    public function update(Request $request, $id)
+    public function update(FieldStoreRequest $request, $id)
     {
-        //
+        $request->validated(); 
+        $name = $request['name'];
+        $label_locale = $request['label_locale'];
+        $field_group_id = (int)$request->get('field_group');
+        $field_type = (int)$request->get('field_type');
+        $default_value = $request['default_value'];
+        $items = $request['items'];    
+        $max_length = $request['max_length'];
+        $sequence = (int)$request->get('sequence');
+        $mandatory = $request['mandatory'] == 'on' ? true : false;
+        $show_in_report = $request['show_in_report'] == 'on' ? true : false;      
+        $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;   
+        $setting = [];
+
+        switch($field_type)
+        {
+            case 0:
+                $setting = [
+                    'default_value' =>$default_value,
+                    'max_length' => $max_length
+                ];
+            break;
+            case 4: case 5:
+
+                if(!isset($items->a))
+                {
+                    $arrayItems  = explode(",", $items);
+                    $setting = [
+                        'default_value' =>$default_value,
+                        'items' => json_encode($arrayItems),
+                    ];
+                }
+                else
+                {
+                    $setting = [
+                        'default_value' =>$default_value,
+                    ];
+                }
+            break;
+            case 1: case 2: case 3:
+                $setting = [
+                    'default_value' =>$default_value,
+                ];
+            break;
+            case 6:
+                $setting = [
+                    'data_source' =>$default_value,
+                ];
+            break;
+        }
+
+        $field = Field::findOrFail($id); 
+        $old_label_locale = $field->label_locale;
+
+        $language_line = LanguageLine::where('group', 'fields')
+                                    ->where('key', $old_label_locale)
+                                    ->first();
+
+        if (!empty($language_line)) 
+        {
+            $field->update([
+                'name' => $name,         
+                'label_locale' => $label_locale,          
+                'field_group_id' => $field_group_id,
+                'field_type' => $field_type,
+                'sequence' => $sequence,
+                'mandatory' => $mandatory,
+                'show_in_report' => $show_in_report,
+                'show_in_portal' => $show_in_portal,
+                'setting' => json_encode($setting)
+            ]);
+
+            $language_line->update([
+                'key' => $label_locale,
+                'text' => [
+                    'en' => $name,
+                ],
+            ]);
+        }                 
+        Session::flash('flash_message', __('fields.flash_messages.updated'));
+        return redirect(route('fields.index'));
     }
 
     /**
@@ -227,8 +360,29 @@ class FieldsController extends Controller
      */
     public function destroy($id)
     {
-        Field::findOrFail($id)->delete();
+        Field::findOrFail($id)->update(['active' => false, 
+                                        'show_in_report' => false,
+                                        'show_in_portal' => false]);
+
         Session::flash('flash_message', __('fields.flash_messages.deleted'));
+        return redirect(route('fields.index'));
+    }
+
+     /**
+     * Switch mandatory to selected
+     *
+     * @param $id
+     * @return Response
+     */
+    function updateMandatory($id)
+    {
+        $field = Field::findOrFail($id);
+        if ($field->mandatory) {         
+            $field->update(['mandatory' => false]);
+        } else {
+            $field->update(['mandatory' => true]);
+        }
+        Session::flash('flash_message', __('fields.flash_messages.mandatory_updated'));
         return redirect(route('fields.index'));
     }
 }
