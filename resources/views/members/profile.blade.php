@@ -9,7 +9,7 @@
 
         <div class="col-lg-8 col-xlg-9 col-md-7">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body" style="padding-bottom: 0px;">
                     <ul class="nav nav-tabs profile-tab">
                         @foreach(config('constants.PROFILE_TABS') as $tab)
                             @php
@@ -27,20 +27,20 @@
                         <div class="tab-pane active">
                             @if($currentTab == 'info')
                                 {!! Form::model($user, ['method' => 'PATCH', 'url' => 'admin/my-profile']) !!}
-                                @include ('admin.users._form')
+                                @include ('members._edit_profile')
                                 {!! Form::close() !!}
                             @elseif($currentTab == $tabs['password'])
                                 {!! Form::model($user, ['method' => 'PATCH', 'url' => 'admin/my-profile/password']) !!}
-                                @include ('admin.users._form_password')
+                                <!-- @include ('admin.users._form_password') -->
                                 {!! Form::close() !!}
                             @endif
                         </div>
                     </div>
                 </div>
             </div>
-            {{--            @include('members._edit_profile')--}}
+            {{--@include('members._edit_profile')--}}
 
-            {{--            @include('members._edit_avatar')--}}
+            {{--@include('members._edit_avatar')--}}
         </div>
     </div>
 @endsection

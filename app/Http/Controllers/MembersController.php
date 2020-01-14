@@ -8,6 +8,8 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\Member;
 use App\Models\User;
+use App\Models\FieldGroup;
+use App\Models\Field;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -178,6 +180,7 @@ class MembersController extends Controller
      */
     public function profile(Request $request)
     {
+      
         $breadcrumbs = [
             'title' => __('members.breadcrumbs.profile'),
             'links' => [
@@ -204,9 +207,24 @@ class MembersController extends Controller
         $currentTab = $request->get('tab');
         if (empty($currentTab) || !in_array($currentTab, array_values($tabs))) {
             $currentTab = config('constants.PROFILE_TABS')['info'];
+            dd('ok');
         }
 
-        return view('members.profile', compact('breadcrumbs', 'user', 'member', 'tabs', 'currentTab'));
+
+        $field_groups = new FieldGroup();
+        $fields = new Field();
+        if($currentTab == config('constants.PROFILE_TABS')['info'])
+        {
+            $field_groups = FieldGroup::latest()->select('id', "label_locale", 'sequence')->get();
+        }
+        
+
+        return view('members.profile', compact('breadcrumbs', 
+                                                'user', 
+                                                'member',
+                                                'field_groups',
+                                                'tabs', 
+                                                'currentTab'));
     }
 
     /**
