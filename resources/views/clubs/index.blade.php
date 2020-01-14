@@ -10,8 +10,9 @@
                     <tr>
                         <th>@lang('validation.attributes.row_index')</th>
                         <th>@lang('validation.attributes.name')</th>
-                        <th>@lang('validation.attributes.label_locale')</th>
-                        <th>@lang('validation.attributes.field_group')</th>
+                        <th>@lang('validation.attributes.region')</th>
+                        <th>@lang('validation.attributes.address')</th>
+                        <th>@lang('validation.attributes.email')</th>
                         <th class="col-action">@lang('validation.attributes.action')</th>
                     </tr>
                     </thead>
@@ -27,15 +28,16 @@
     <script type="text/javascript">
         $(function () {
             let columnOptions = {
-                ajax: '{{ route('fields.index') }}',
+                ajax: '{{ route('clubs.index') }}',
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
-                    {data: 'field_name', name: 'field_name',},
-                    {data: 'label_locale', name: 'label_locale'},
-                    {data: 'field_group_name', name: 'field_group_name', className: 'text-center'},
+                    {data: 'name', name: 'name'},
+                    {data: 'region', name: 'region'},
+                    {data: 'address', name: 'address'},
+                    {data: 'email', name: 'email'},
                     {data: 'action', name: 'action', orderable: false, searchable: false, className: 'col-action'},
                 ],
-                order: [[1, 'asc']], // field_name
+                order: [[1, 'asc']], // column Name
                 pageLength: {{ config('constants.PAGE_SIZE') }},
             };
 
@@ -46,10 +48,10 @@
                         text: 'New',
                         className: 'btn-new',
                         action: function () {
-                            window.location.href = '{{ route('fields.create') }}';
+                            window.location.href = '{{ route('clubs.create') }}';
                         },
                     },
-                    datatablesExport('Fields'),
+                    datatablesExport('Clubs'),
                     datatablesColumnVisibility(),
                 ],
             };

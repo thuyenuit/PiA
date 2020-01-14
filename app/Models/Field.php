@@ -28,20 +28,16 @@ class Field extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 
+        'name',
         'field_group_id',
         'label_locale',
         'field_type',
-        'sequence', 
+        'sequence',
         'mandatory',
         'active',
         'show_in_report',
         'show_in_portal',
         'setting'
-    ];
-
-    protected $casts = [
-        'permissions' => 'array',
     ];
 
     public function field_group()

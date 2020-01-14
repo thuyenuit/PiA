@@ -3,7 +3,7 @@
     @include('layouts._breadcrumbs')
 
     <div class="page-content">
-        {!! Form::open(['method' => 'PATCH', 'url' => route('fields.update', $field, $array_field_groups, $array_field_types)]) !!}
+        {!! Form::open(['method' => 'PATCH', 'url' => route('fields.update', $field)]) !!}
         @include('fields._form')
         {!! Form::close() !!}
     </div>

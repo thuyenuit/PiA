@@ -28,13 +28,9 @@ class FieldGroup extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 
+        'name',
         'label_locale',
         'sequence'
-    ];
-
-    protected $casts = [
-        'permissions' => 'array',
     ];
 
     public function custom_fields()

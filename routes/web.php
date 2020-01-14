@@ -22,7 +22,9 @@ Route::group(['middleware' => ['auth']], function () {
     // Members management
     Route::resource('members', 'MembersController');
     Route::get('my-profile', 'MembersController@profile')->name('my_profile');
-
+    Route::post('my-profile', 'MembersController@updateProfile')->name('my_profile');
+    Route::post('update-avatar', 'MembersController@updateAvatar')->name('update_avatar');
+    
     // Clubs management
     Route::resource('clubs', 'ClubsController');
 
@@ -38,7 +40,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('statistics/payment', 'StatisticsController@payment')->name('statistics.payment');
 
     // Field Groups management
-    Route::resource('fieldgroups', 'FieldGroupsController');
+    Route::resource('field_groups', 'FieldGroupsController');
     
     // Fields management
     Route::resource('fields', 'FieldsController');

@@ -13,7 +13,7 @@ class FieldMember extends Model
      *
      * @var string
      */
-    protected $table = 'custom_field_members';
+    protected $table = 'field_members';
 
     /**
      * The database primary key value.
@@ -28,14 +28,9 @@ class FieldMember extends Model
      * @var array
      */
     protected $fillable = [
-        'field_id', 
+        'field_id',
         'member_id',
-        'sequence',
         'value'
-    ];
-
-    protected $casts = [
-        'permissions' => 'array',
     ];
 
     public function fields()

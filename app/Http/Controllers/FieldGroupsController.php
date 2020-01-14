@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\FieldGroupStoreRequest;
-use App\Models\FieldGroup;
 use App\Helpers\CommonHelper;
+use App\Http\Requests\FieldGroupSaveRequest;
+use App\Models\Field;
+use App\Models\FieldGroup;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
 
-use Exception;
-
 class FieldGroupsController extends Controller
 {
-     /**
+    /**
      * Display a listing of the field group.
      *
      * @param Request $request
@@ -24,16 +23,13 @@ class FieldGroupsController extends Controller
      */
     public function index(Request $request)
     {
-        $language = App::getLocale();
-        $datas = FieldGroup::latest()->select('id', "label_locale", 'sequence')->get();
-       
         if ($request->ajax()) {
-           
+            $datas = FieldGroup::latest()->select('id', "label_locale", 'sequence')->get();
             return DataTables::of($datas)
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) {                  
-                    $btnEdit = CommonHelper::generateButtonEdit(route('fieldgroups.edit', $row));
-                    $btnDelete = CommonHelper::generateButtonDelete(route('fieldgroups.destroy', $row));
+                ->addColumn('action', function ($row) {
+                    $btnEdit = CommonHelper::generateButtonEdit(route('field_groups.edit', $row));
+                    $btnDelete = CommonHelper::generateButtonDelete(route('field_groups.destroy', $row));
                     return $btnEdit . $btnDelete;
                 })
                 ->make(true);
@@ -65,7 +61,7 @@ class FieldGroupsController extends Controller
                 [
                     'text' => __('layouts.sidebar.settings.field_groups'),
                     'active' => false,
-                    'href' => route('fieldgroups.index'),
+                    'href' => route('field_groups.index'),
                 ],
                 [
                     'text' => __('field_groups.breadcrumbs.create'),
@@ -74,23 +70,23 @@ class FieldGroupsController extends Controller
             ]
         ];
 
-        $customfieldgroup = new FieldGroup();
+        $field_group = new FieldGroup();
 
-        return view('field_groups.create', compact('breadcrumbs', 'customfieldgroup'));
+        return view('field_groups.create', compact('breadcrumbs', 'field_group'));
     }
 
     /**
      * Store a newly created field group in storage.
      *
-     * @param FieldGroupStoreRequest $request
+     * @param FieldGroupSaveRequest $request
      * @return Response
      */
-    public function store(FieldGroupStoreRequest $request)
+    public function store(FieldGroupSaveRequest $request)
     {
         $request->validated();
         FieldGroup::create($request->all());
         Session::flash('flash_message', __('field_groups.flash_messages.created'));
-        return redirect(route('fieldgroups.index'));
+        return redirect(route('field_groups.index'));
     }
 
     /**
@@ -107,7 +103,7 @@ class FieldGroupsController extends Controller
                 [
                     'text' => __('layouts.sidebar.settings.field_groups'),
                     'active' => false,
-                    'href' => route('fieldgroups.index'),
+                    'href' => route('field_groups.index'),
                 ],
                 [
                     'text' => __('field_groups.breadcrumbs.edit'),
@@ -116,24 +112,24 @@ class FieldGroupsController extends Controller
             ]
         ];
 
-        $customfieldgroup = FieldGroup::findOrFail($id); 
-        return view('field_groups.edit', compact('breadcrumbs', 'customfieldgroup'));
+        $field_group = FieldGroup::findOrFail($id);
+        return view('field_groups.edit', compact('breadcrumbs', 'field_group'));
     }
 
     /**
      * Update the specified field group in storage.
      *
-     * @param FieldGroupStoreRequest $request
+     * @param FieldGroupSaveRequest $request
      * @param int $id
      * @return Response
      */
-    public function update(FieldGroupStoreRequest $request, $id)
+    public function update(FieldGroupSaveRequest $request, $id)
     {
         $request->validated();
         FieldGroup::findOrFail($id)->update($request->all());
 
         Session::flash('flash_message', __('field_groups.flash_messages.updated'));
-        return redirect(route('fieldgroups.index'));
+        return redirect(route('field_groups.index'));
     }
 
     /**
@@ -144,8 +140,14 @@ class FieldGroupsController extends Controller
      */
     public function destroy($id)
     {
+        $field = Field::where('field_group_id', $id)->first();
+        if (!empty($field)) {
+            Session::flash('flash_error', __('field_groups.flash_messages.cant_delete'));
+            return redirect(route('field_groups.index'));
+        }
+
         FieldGroup::findOrFail($id)->delete();
         Session::flash('flash_message', __('field_groups.flash_messages.deleted'));
-        return redirect(route('fieldgroups.index'));
+        return redirect(route('field_groups.index'));
     }
 }

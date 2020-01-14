@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Field;
-use App\Models\FieldViewModel;
-use App\Models\FieldGroup;
 use App\Helpers\CommonHelper;
-use App\Http\Requests\FieldStoreRequest;
+use App\Http\Requests\FieldSaveRequest;
+use App\Models\Field;
+use App\Models\FieldGroup;
+use App\Models\FieldMember;
+use App\ViewModels\FieldViewModel;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Session;
-use Yajra\DataTables\Facades\DataTables;
 use Spatie\TranslationLoader\LanguageLine;
-use Exception;
+use Yajra\DataTables\Facades\DataTables;
 
 class FieldsController extends Controller
 {
-     /**
+    /**
      * Display a listing of the custom field.
      *
      * @param Request $request
@@ -24,22 +25,22 @@ class FieldsController extends Controller
      * @throws Exception
      */
     public function index(Request $request)
-    {  
+    {
         if ($request->ajax()) {
-            $data = Field::select('fields.id', 
-                                    'fields.name as field_name',
-                                    'fields.label_locale as label_locale',
-                                    'field_groups.label_locale as field_group_name',
-                                    'fields.sequence as field_sequence',
-                                    'field_groups.sequence as field_group_sequence',
-                                    'fields.mandatory')
-                                ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
-                                ->where('active', true)
-                                ->orderBy('field_group_sequence')
-                                ->orderBy('field_group_name')
-                                ->orderBy('field_sequence')
-                                ->orderBy('field_name')
-                                ->get();
+            $data = Field::select('fields.id',
+                'fields.name as field_name',
+                'fields.label_locale as label_locale',
+                'field_groups.label_locale as field_group_name',
+                'fields.sequence as field_sequence',
+                'field_groups.sequence as field_group_sequence',
+                'fields.mandatory')
+                ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
+                ->where('active', true)
+                ->orderBy('field_group_sequence')
+                ->orderBy('field_group_name')
+                ->orderBy('field_sequence')
+                ->orderBy('field_name')
+                ->get();
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -50,7 +51,7 @@ class FieldsController extends Controller
                 })
                 ->addColumn('mandatory', function ($row) {
                     $switchChecked = $row->mandatory ? 'checked' : '';
-                    $switch = "<label><input type='checkbox' $switchChecked><span class='lever switch-col-blue'></span></label>";              
+                    $switch = "<label><input type='checkbox' $switchChecked><span class='lever switch-col-blue'></span></label>";
                     $url = route('fields.mandatory', $row);
                     $button = "<a onclick='confirmSwitchMandatory(event, this, {$row->mandatory})'>$switch</a>";
                     return "<div class='switch'><form method='POST' action='$url' class='ml-1'>" . csrf_field() . $button . "</form></div>";
@@ -78,7 +79,7 @@ class FieldsController extends Controller
      * @return Response
      */
     public function create()
-    { 
+    {
         $breadcrumbs = [
             'title' => __('fields.breadcrumbs.create'),
             'links' => [
@@ -94,79 +95,77 @@ class FieldsController extends Controller
             ]
         ];
 
-        $field = new FieldViewModel();   
+        $field = new FieldViewModel();
         $field->show_in_portal = true;
-        $field->show_in_report = true;  
+        $field->show_in_report = true;
         $array_field_groups = FieldGroup::select('id', "label_locale", 'sequence')
-                                        ->orderBy('sequence')
-                                        ->orderBy('label_locale')
-                                        ->pluck('label_locale', 'id')->toArray(); 
-        $array_field_types = CommonHelper::collectionFieldType()->pluck('value', 'key')->toArray(); 
+            ->orderBy('sequence')
+            ->orderBy('label_locale')
+            ->pluck('label_locale', 'id')->toArray();
+        $array_field_types = config('constants.FIELD_TYPE_ARRAY');
         return view('fields.create', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
 
     /**
      * Store a newly created field in storage.
      *
-     * @param FieldStoreRequest $request
+     * @param FieldSaveRequest $request
      * @return Response
      */
-    public function store(FieldStoreRequest $request)
-    {   
-        $request->validated(); 
+    public function store(FieldSaveRequest $request)
+    {
+        $request->validated();
         $name = $request['name'];
         $label_locale = $request['label_locale'];
         $field_group_id = (int)$request->get('field_group');
         $field_type = (int)$request->get('field_type');
         $default_value = $request['default_value'];
-        $items = $request['items'];    
+        $items = $request['items'];
         $max_length = $request['max_length'];
         $sequence = (int)$request->get('sequence');
         $mandatory = $request['mandatory'] == 'on' ? true : false;
-        $show_in_report = $request['show_in_report'] == 'on' ? true : false;      
-        $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;   
+        $show_in_report = $request['show_in_report'] == 'on' ? true : false;
+        $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;
         $setting = [];
-        
-        switch($field_type)
-        {
-            case 0:
+
+        switch ($field_type) {
+            case config('constants.FIELD_TYPE')['string']:
                 $setting = [
-                    'default_value' =>$default_value,
+                    'default_value' => $default_value,
                     'max_length' => $max_length
                 ];
-            break;
-            case 4: case 5:
-
-                if(!isset($items->a))
-                {
-                    $arrayItems  = explode(",", $items);
+                break;
+            case config('constants.FIELD_TYPE')['number']:
+            case config('constants.FIELD_TYPE')['boolean']:
+            case config('constants.FIELD_TYPE')['date']:
+                $setting = [
+                    'default_value' => $default_value,
+                ];
+                break;
+            case config('constants.FIELD_TYPE')['single_choice']:
+            case config('constants.FIELD_TYPE')['multi_choice']:
+                if (!isset($items->a)) {
+                    $arrayItems = explode(",", $items);
                     $setting = [
-                        'default_value' =>$default_value,
+                        'default_value' => $default_value,
                         'items' => json_encode($arrayItems),
                     ];
-                }
-                else
-                {
+                } else {
                     $setting = [
-                        'default_value' =>$default_value,
+                        'default_value' => $default_value,
                     ];
                 }
-            break;
-            case 1: case 2: case 3:
+                break;
+            case config('constants.FIELD_TYPE')['data_source']:
                 $setting = [
-                    'default_value' =>$default_value,
+                    'data_source' => $default_value,
                 ];
-            break;
-            case 6:
-                $setting = [
-                    'data_source' =>$default_value,
-                ];
-            break;
+                break;
         }
 
         Field::create([
-            'name' => $name,         
-            'label_locale' => $label_locale,          
+            'name' => $name,
+            'label_locale' => $label_locale,
             'field_group_id' => $field_group_id,
             'field_type' => $field_type,
             'sequence' => $sequence,
@@ -178,13 +177,13 @@ class FieldsController extends Controller
         ]);
 
         LanguageLine::create([
-             'group' => 'fields',
-             'key' => $label_locale,
-             'text' => [
-                 'en' => $name,
-             ],
+            'group' => 'fields',
+            'key' => $label_locale,
+            'text' => [
+                'en' => $name,
+            ],
         ]);
-       
+
         Session::flash('flash_message', __('fields.flash_messages.created'));
         return redirect(route('fields.index'));
     }
@@ -212,8 +211,8 @@ class FieldsController extends Controller
             ]
         ];
 
-        $fieldDB = Field::findOrFail($id); 
-        $field = new FieldViewModel();     
+        $fieldDB = Field::findOrFail($id);
+        $field = new FieldViewModel();
         $field->id = $fieldDB->id;
         $field->name = $fieldDB->name;
         $field->label_locale = $fieldDB->label_locale;
@@ -225,104 +224,104 @@ class FieldsController extends Controller
         $field->show_in_portal = $fieldDB->show_in_portal;
         $objSetting = json_decode($fieldDB->setting);
 
-        switch($field->field_type)
-        {
-            case 0:
+        switch ($field->field_type) {
+            case config('constants.FIELD_TYPE')['string']:
                 $field->default_value = $objSetting->default_value;
                 $field->max_length = $objSetting->max_length;
-            break;
-            case 4: case 5:           
+                break;
+            case config('constants.FIELD_TYPE')['number']:
+            case config('constants.FIELD_TYPE')['boolean']:
+            case config('constants.FIELD_TYPE')['date']:
+                $field->default_value = $objSetting->default_value;
+                break;
+            case config('constants.FIELD_TYPE')['single_choice']:
+            case config('constants.FIELD_TYPE')['multi_choice']:
                 $objItems = json_decode($objSetting->items);
                 $field->default_value = $objSetting->default_value;
-                $field->items = implode (",", $objItems);
-            break;
-            case 1: case 2: case 3:
-                $field->default_value = $objSetting->default_value;
-            break;
-            case 6:
+                $field->items = implode(",", $objItems);
+                break;
+            case config('constants.FIELD_TYPE')['data_source']:
                 $field->default_value = $objSetting->data_source;
-            break;
+                break;
         }
-       
+
         $array_field_groups = FieldGroup::select('id', "label_locale", 'sequence')
-                                        ->orderBy('sequence')
-                                        ->orderBy('label_locale')
-                                        ->pluck('label_locale', 'id')->toArray(); 
-        $array_field_types = CommonHelper::collectionFieldType()->pluck('value', 'key')->toArray(); 
+            ->orderBy('sequence')
+            ->orderBy('label_locale')
+            ->pluck('label_locale', 'id')->toArray();
+        $array_field_types = config('constants.FIELD_TYPE_ARRAY');
         return view('fields.edit', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
 
     /**
      * Update the specified field in storage.
      *
-     * @param FieldStoreRequest $request
+     * @param FieldSaveRequest $request
      * @param int $id
      * @return Response
      */
-    public function update(FieldStoreRequest $request, $id)
+    public function update(FieldSaveRequest $request, $id)
     {
-        $request->validated(); 
+        $request->validated();
         $name = $request['name'];
         $label_locale = $request['label_locale'];
         $field_group_id = (int)$request->get('field_group');
         $field_type = (int)$request->get('field_type');
         $default_value = $request['default_value'];
-        $items = $request['items'];    
+        $items = $request['items'];
         $max_length = $request['max_length'];
         $sequence = (int)$request->get('sequence');
         $mandatory = $request['mandatory'] == 'on' ? true : false;
-        $show_in_report = $request['show_in_report'] == 'on' ? true : false;      
-        $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;   
+        $show_in_report = $request['show_in_report'] == 'on' ? true : false;
+        $show_in_portal = $request['show_in_portal'] == 'on' ? true : false;
         $setting = [];
-        switch($field_type)
-        {
-            case 0:
+        switch ($field_type) {
+            case config('constants.FIELD_TYPE')['string']:
                 $setting = [
-                    'default_value' =>$default_value,
+                    'default_value' => $default_value,
                     'max_length' => $max_length
                 ];
-            break;
-            case 4: case 5:
+                break;
+            case config('constants.FIELD_TYPE')['number']:
+            case config('constants.FIELD_TYPE')['boolean']:
+            case config('constants.FIELD_TYPE')['date']:
+                $setting = [
+                    'default_value' => $default_value,
+                ];
+                break;
+            case config('constants.FIELD_TYPE')['single_choice']:
+            case config('constants.FIELD_TYPE')['multi_choice']:
 
-                if(!isset($items->a))
-                {
-                    $arrayItems  = explode(",", $items);
+                if (!isset($items->a)) {
+                    $arrayItems = explode(",", $items);
                     $setting = [
-                        'default_value' =>$default_value,
+                        'default_value' => $default_value,
                         'items' => json_encode($arrayItems),
                     ];
-                }
-                else
-                {
+                } else {
                     $setting = [
-                        'default_value' =>$default_value,
+                        'default_value' => $default_value,
                     ];
                 }
-            break;
-            case 1: case 2: case 3:
+                break;
+            case config('constants.FIELD_TYPE')['data_source']:
                 $setting = [
-                    'default_value' =>$default_value,
+                    'data_source' => $default_value,
                 ];
-            break;
-            case 6:
-                $setting = [
-                    'data_source' =>$default_value,
-                ];
-            break;
+                break;
         }
 
-        $field = Field::findOrFail($id); 
+        $field = Field::findOrFail($id);
         $old_label_locale = $field->label_locale;
 
         $language_line = LanguageLine::where('group', 'fields')
-                                    ->where('key', $old_label_locale)
-                                    ->first();
+            ->where('key', $old_label_locale)
+            ->first();
 
-        if (!empty($language_line)) 
-        {
+        if (!empty($language_line)) {
             $field->update([
-                'name' => $name,         
-                'label_locale' => $label_locale,          
+                'name' => $name,
+                'label_locale' => $label_locale,
                 'field_group_id' => $field_group_id,
                 'field_type' => $field_type,
                 'sequence' => $sequence,
@@ -338,7 +337,7 @@ class FieldsController extends Controller
                     'en' => $name,
                 ],
             ]);
-        }                 
+        }
         Session::flash('flash_message', __('fields.flash_messages.updated'));
         return redirect(route('fields.index'));
     }
@@ -351,15 +350,21 @@ class FieldsController extends Controller
      */
     public function destroy($id)
     {
-        Field::findOrFail($id)->update(['active' => false, 
-                                        'show_in_report' => false,
-                                        'show_in_portal' => false]);
+        $field_member = FieldMember::where('field_id', $id)->first();
+        if (!empty($field_member)) {
+            Session::flash('flash_error', __('fields.flash_messages.cant_delete'));
+            return redirect(route('fields.index'));
+        }
+
+        Field::findOrFail($id)->update(['active' => false,
+            'show_in_report' => false,
+            'show_in_portal' => false]);
 
         Session::flash('flash_message', __('fields.flash_messages.deleted'));
         return redirect(route('fields.index'));
     }
 
-     /**
+    /**
      * Switch mandatory to selected
      *
      * @param $id
@@ -368,7 +373,7 @@ class FieldsController extends Controller
     function updateMandatory($id)
     {
         $field = Field::findOrFail($id);
-        if ($field->mandatory) {         
+        if ($field->mandatory) {
             $field->update(['mandatory' => false]);
         } else {
             $field->update(['mandatory' => true]);

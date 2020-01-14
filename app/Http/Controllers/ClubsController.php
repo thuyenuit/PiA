@@ -2,19 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ClubsHelper;
+use App\Helpers\CommonHelper;
+use App\Http\Requests\ClubSaveRequest;
+use App\Models\Club;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Session;
+use Yajra\DataTables\Facades\DataTables;
 
 class ClubsController extends Controller
 {
+    use ClubsHelper;
+
     /**
      * Display a listing of the club.
      *
+     * @param Request $request
      * @return Response
+     * @throws \Exception
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if ($request->ajax()) {
+            $data = Club::select('id', 'name', 'region', 'address', 'email')->orderBy('created_at', 'desc')->get();
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $btnShow = CommonHelper::generateButtonShow(route('clubs.show', $row->id));
+                    $btnEdit = CommonHelper::generateButtonEdit(route('clubs.edit', $row->id));
+                    $btnDelete = CommonHelper::generateButtonDelete(route('clubs.destroy', $row->id));
+                    return $btnShow . $btnEdit . $btnDelete;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        $breadcrumbs = [
+            'title' => __('layouts.sidebar.clubs'),
+            'links' => [
+                [
+                    'text' => __('layouts.sidebar.clubs'),
+                    'active' => true,
+                ]
+            ]
+        ];
+
+        return view('clubs.index', compact('breadcrumbs'));
     }
 
     /**
@@ -24,18 +59,51 @@ class ClubsController extends Controller
      */
     public function create()
     {
-        //
+        $breadcrumbs = [
+            'title' => __('clubs.breadcrumbs.new'),
+            'links' => [
+                [
+                    'text' => __('layouts.sidebar.clubs'),
+                    'active' => false,
+                    'href' => route('clubs.index'),
+                ],
+                [
+                    'text' => __('clubs.breadcrumbs.new'),
+                    'active' => true,
+                ]
+            ]
+        ];
+        $club = new Club();
+        $users = [];
+
+        return view('clubs.create', compact('breadcrumbs', 'users', 'club'));
     }
 
     /**
      * Store a newly created club in storage.
      *
-     * @param Request $request
+     * @param ClubSaveRequest $request
      * @return Response
      */
-    public function store(Request $request)
+    public function store(ClubSaveRequest $request)
     {
-        //
+        $request->validated();
+
+        $requestData = $request->all();
+
+        if ($request->hasFile('club_logo')) {
+            $requestData['club_logo'] = $this->storeImage($request, 'club_logo');
+        }
+
+        $requestData['charge_club_of_quota'] = ($request->has('charge_club_of_quota')) ? true : false;
+        if (!$requestData['charge_club_of_quota']) {
+            $requestData['monthly_payment'] = null;
+        }
+
+        Club::create($requestData);
+
+        Session::flash('flash_message', __('clubs.flash_messages.created'));
+        return redirect(route('clubs.index'));
     }
 
     /**
@@ -46,7 +114,24 @@ class ClubsController extends Controller
      */
     public function show($id)
     {
-        //
+        $club = Club::findOrFail($id);
+
+        $breadcrumbs = [
+            'title' => $club->name,
+            'links' => [
+                [
+                    'text' => __('layouts.sidebar.clubs'),
+                    'active' => false,
+                    'href' => route('clubs.index'),
+                ],
+                [
+                    'text' => $club->name,
+                    'active' => true,
+                ]
+            ]
+        ];
+
+        return view('clubs.show', compact('breadcrumbs', 'club'));
     }
 
     /**
@@ -57,19 +142,53 @@ class ClubsController extends Controller
      */
     public function edit($id)
     {
-        //
+        $breadcrumbs = [
+            'title' => __('clubs.breadcrumbs.edit'),
+            'links' => [
+                [
+                    'text' => __('layouts.sidebar.clubs'),
+                    'active' => false,
+                    'href' => route('clubs.index'),
+                ],
+                [
+                    'text' => __('clubs.breadcrumbs.edit'),
+                    'active' => true,
+                ]
+            ]
+        ];
+
+        $club = Club::findOrFail($id);
+        $users = User::pluck('name', 'id');
+
+        return view('clubs.edit', compact('breadcrumbs', 'users', 'club'));
     }
 
     /**
      * Update the specified club in storage.
      *
-     * @param Request $request
+     * @param ClubSaveRequest $request
      * @param int $id
      * @return Response
      */
-    public function update(Request $request, $id)
+    public function update(ClubSaveRequest $request, $id)
     {
-        //
+        $request->validated();
+
+        $requestData = $request->all();
+
+        if ($request->hasFile('club_logo')) {
+            $this->deleteImage($id);
+            $requestData['club_logo'] = $this->storeImage($request, 'club_logo');
+        }
+        $requestData['charge_club_of_quota'] = ($request->has('charge_club_of_quota')) ? true : false;
+        if (!$requestData['charge_club_of_quota']) {
+            $requestData['monthly_payment'] = null;
+        }
+
+        Club::findOrFail($id)->update($requestData);
+
+        Session::flash('flash_message', __('clubs.flash_messages.updated'));
+        return redirect(route('clubs.index'));
     }
 
     /**
@@ -80,6 +199,10 @@ class ClubsController extends Controller
      */
     public function destroy($id)
     {
-        //
+        Club::findOrFail($id)->delete();
+
+        Session::flash('flash_message', __('clubs.flash_messages.deleted'));
+
+        return redirect(route('clubs.index'));
     }
 }

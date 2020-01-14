@@ -11,6 +11,10 @@
 @import '~toastr/toastr';
 // Dropify
 @import '~dropify/dist/css/dropify.min.css';
+// Cropper
+@import '~cropper/dist/cropper.min.css';
+// Select2
+@import '~select2/dist/css/select2.min.css';
 
 // Theme base
 @import 'theme/variable';
@@ -34,3 +38,4 @@
 @import 'theme/colors/blue';
 // Main Customize
 @import 'app/main';
+@import 'theme/css/avatar.css';

@@ -20,7 +20,7 @@
             <div class="form-group col-md-12 m-t-20">
                 <h4 class="card-title">@lang('groups.permission_groups.system')</h4>
                 <div class="row">
-                    @foreach(config('constants.SYSTEM_PERMISSIONS') as $permission)
+                    @foreach(config('constants.SYSTEM_PERMISSIONS') as $permission => $value)
                         <div class="col-md-6">
                             <input type="checkbox" class="check"
                                    {{ !empty($group->permissions) && in_array($permission, $group->permissions) ? 'checked' : '' }}
@@ -36,7 +36,7 @@
 
                 <h4 class="card-title m-t-20">@lang('groups.permission_groups.organization')</h4>
                 <div class="row">
-                    @foreach(config('constants.ORG_PERMISSIONS') as $permission)
+                    @foreach(config('constants.ORG_PERMISSIONS') as $permission => $value)
                         <div class="col-md-6">
                             <input type="checkbox" class="check"
                                    {{ !empty($group->permissions) && in_array($permission, $group->permissions) ? 'checked' : '' }}

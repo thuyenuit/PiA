@@ -42,9 +42,16 @@ window.Swal = require('sweetalert2');
 // Dropify
 window.Dropify = require('dropify');
 
+// Cropper
+require('cropper');
+
+// Select2
+window.Select2 = require('select2');
+
 // Theme
 require('./theme/sidebarmenu');
 require('./theme/main');
+require('./theme/cropper_user');
 
 // App
 require('./app/custom_file_input');

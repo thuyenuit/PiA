@@ -26,7 +26,7 @@
     <script type="text/javascript">
         $(function () {
             let columnOptions = {
-                ajax: '{{ route('fieldgroups.index') }}',
+                ajax: '{{ route('field_groups.index') }}',
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                     {data: 'label_locale', name: 'label_locale'},
@@ -44,10 +44,10 @@
                         text: 'New',
                         className: 'btn-new',
                         action: function () {
-                            window.location.href = '{{ route('fieldgroups.create') }}';
+                            window.location.href = '{{ route('field_groups.create') }}';
                         },
                     },
-                    //datatablesExport('Groups'),
+                    datatablesExport('Groups'),
                     datatablesColumnVisibility(),
                 ],
             };

@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\CommonHelper;
+use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
+use App\Models\Member;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -170,9 +173,100 @@ class MembersController extends Controller
 
     /**
      * Get profile of current user
+     * @param Request $request
+     * @return Response
      */
-    public function profile()
+    public function profile(Request $request)
     {
+        $breadcrumbs = [
+            'title' => __('members.breadcrumbs.profile'),
+            'links' => [
+                [
+                    'text' => __('members.breadcrumbs.profile'),
+                    'active' => false,
+                    'href' => route('my_profile'),
+                ],
+                [
+                    'text' => __('members.breadcrumbs.edit_profile'),
+                    'active' => true,
+                ],
+            ]
+        ];
 
+        $user = Auth::user();
+        $member = $user->member;
+
+        if (empty($member)) {
+            $member = new Member();
+        }
+
+        $tabs = config('constants.PROFILE_TABS');
+        $currentTab = $request->get('tab');
+        if (empty($currentTab) || !in_array($currentTab, array_values($tabs))) {
+            $currentTab = config('constants.PROFILE_TABS')['info'];
+        }
+
+        return view('members.profile', compact('breadcrumbs', 'user', 'member', 'tabs', 'currentTab'));
+    }
+
+    /**
+     * Update profile of current user
+     *
+     * @param ProfileUpdateRequest $request
+     * @return Response
+     */
+    public function updateProfile(ProfileUpdateRequest $request)
+    {
+        $request->validated();
+        $user = Auth::user();
+        $member = $user->member;
+        User::findOrFail($user->id)->update(['name' => $request->name]);
+        User::findOrFail($user->id)->update(['email' => $request->email]);
+        Member::findOrFail($member->id)->update(['address' => $request->address]);
+        Member::findOrFail($member->id)->update(['town' => $request->town]);
+        Member::findOrFail($member->id)->update(['phone' => $request->phone]);
+        //$member = Auth::user()->update($requestData);
+        return redirect()->route('my_profile');
+    }
+
+    /**
+     * Update avatar of current user
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function updateAvatar(Request $request)
+    {
+        $requestData = $request->all();
+        $base64_str = substr($requestData['image'], strpos($requestData['image'], ",") + 1);
+        if (CommonHelper::isBase64Encoded($base64_str)) {
+            $fileExtension = CommonHelper::getFileExtension($requestData['image']);
+            $fileName = 'avatar' . '_' . time() . '_' . rand(0, 9999999) . '.' . $fileExtension;
+            $image = base64_decode($base64_str);
+            file_put_contents(public_path(config('constants.UPLOAD.LOGO_ICON')) . '/' . $fileName, $image);
+            $user = Auth::user();
+            $member = $user->member;
+            Member::findOrFail($member->id)->update(['avatar' => $fileName]);
+        }
+        return redirect()->route('my_profile');
+    }
+
+    public function updatePassword(PasswordUpdateRequest $request)
+    {
+        $user = User::findOrFail(Auth::id());
+        $request->validated();
+        if ($user->password) {
+            $currentPassword = $request->old_password;
+            $newPassword = $request->password;
+            if (Hash::check($currentPassword, $user->password)) {
+                $user->password = Hash::make($newPassword);
+                $user->save();
+                Session::flash('flash_message', __('admin.users.flash_messages.updated_password'));
+                return redirect('admin/my-profile?tab=' . User::PROFILE_TABS['password']);
+            } else {
+                Session::flash('flash_message', __('admin.users.flash_messages.password_incorrect'));
+                return redirect('admin/my-profile?tab=' . User::PROFILE_TABS['password']);
+            }
+        }
     }
 }

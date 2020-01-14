@@ -45,4 +45,11 @@ class Member extends Model
     {
         return $this->belongsTo('App\Models\User');
     }
+
+    public function avatarUrl(): string
+    {
+        if (empty($this->avatar)) {
+            return Configuration::imageUrlByKey(config('constants.CONFIG_KEY.DEFAULT_AVATAR_IMAGE'));
+        }
+    }
 }

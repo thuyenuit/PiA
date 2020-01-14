@@ -69,7 +69,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('fieldgroups.index') }}">
+                            <a href="{{ route('field_groups.index') }}">
                                 @lang('layouts.sidebar.settings.field_groups')
                             </a>
                         </li>

@@ -49,6 +49,7 @@
 </script>
 
 @include('layouts._confirm_delete')
+@include('layouts._is_number')
 @include('layouts._toast_message')
 @include('layouts._datatables')
 @include('layouts._dropify')
