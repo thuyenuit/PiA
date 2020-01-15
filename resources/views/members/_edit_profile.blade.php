@@ -63,17 +63,25 @@
     <div class="section">
         <div class="card card-outline-info m-b-0">
             <div class="card-header bg-theme" data-toggle="collapse" data-target="#group-{{$group->id}}">
-                <h4 class="m-b-0 text-white">{{$group->label_locale}}</h4>
+                <h4 class="m-b-0 text-white">{{ $group->label_locale }}</h4>
             </div>
-            <div class="card-body form-material row collapse show" id="group-{{$group->id}}"> 
-                <div class="form-group col-md-6 m-t-20">
-                    <label>
-                        @lang('validation.attributes.name')                    
-                        <span class="text-danger">*</span>
-                    </label>           
-                    <input type="text" name="name" value="{{$user->name}}" class="form-control">
-                        {!! $errors->first('name', '<p class="text-danger">:message</p>') !!}
-                </div>           
+            <div class="card-body form-material row collapse show" id="group-{{$group->id}}">
+                @foreach($fields as $field)
+                    @if($field->field_group_id == $group->id)
+                        <div class="form-group col-md-6 m-t-20">
+                            <label>
+                                {{ $field->field_name }}
+                                @if($field->mandatory == true)
+                                    <span class="text-danger">*</span>
+                                @endif
+                            </label>
+                            <input type="{{ $field->field_type }}" name="{{ $field->field_locale_key }}"
+                                   value="{{ $field->setting->default_value }}" class="form-control"
+                                   maxlength="{{ isset($field->setting->max_length) ? $field->setting->max_length : '' }}">
+                            {!! $errors->first($field->field_locale_key, '<p class="text-danger">:message</p>') !!}
+                        </div>
+                    @endif
+                @endforeach
             </div>
         </div>
     </div>

@@ -206,25 +206,51 @@ class MembersController extends Controller
         $tabs = config('constants.PROFILE_TABS');
         $currentTab = $request->get('tab');
         if (empty($currentTab) || !in_array($currentTab, array_values($tabs))) {
-            $currentTab = config('constants.PROFILE_TABS')['info'];
-            dd('ok');
+            $currentTab = config('constants.PROFILE_TABS')['info'];         
         }
-
 
         $field_groups = new FieldGroup();
         $fields = new Field();
-        if($currentTab == config('constants.PROFILE_TABS')['info'])
-        {
-            $field_groups = FieldGroup::latest()->select('id', "label_locale", 'sequence')->get();
+        if ($currentTab == config('constants.PROFILE_TABS')['info']) {
+            $field_groups = FieldGroup::select('id', "label_locale", 'sequence')->orderBy('sequence')->get();
+            $fields = Field::select('fields.id',
+                                    'fields.name as field_name',
+                                    'fields.field_group_id',
+                                    'fields.label_locale as field_locale_key',
+                                    'fields.field_type',
+                                    'fields.sequence as field_sequence',
+                                    'fields.mandatory',
+                                    'fields.setting',
+                                    'field_members.value',
+                                    'field_groups.label_locale as field_group_name',
+                                    'field_groups.sequence as field_group_sequence',)
+                            ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
+                            ->leftJoin('field_members', function($join){
+                                $join->on('fields.id', '=', 'field_members.field_id') 
+                                    ->where('field_members.member_id', '=', Auth::id());
+                            })
+                            ->where('fields.active', true)
+                            ->where('fields.show_in_portal', true)
+                            ->orderBy('field_group_sequence')
+                            ->orderBy('field_group_name')
+                            ->orderBy('field_sequence')
+                            ->orderBy('field_name')
+                            ->get();
+                            
+            foreach ($fields as $field) {
+                $field->setting = json_decode($field->setting);              
+            }
         }
+
         
 
-        return view('members.profile', compact('breadcrumbs', 
-                                                'user', 
-                                                'member',
-                                                'field_groups',
-                                                'tabs', 
-                                                'currentTab'));
+        return view('members.profile', compact('breadcrumbs',
+            'user',
+            'member',
+            'field_groups',
+            'fields',
+            'tabs',
+            'currentTab'));
     }
 
     /**
