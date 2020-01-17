@@ -17,7 +17,7 @@ class CreateFieldsTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->integer('field_group_id');
-            $table->string('label_locale');
+            $table->string('locale_key');
             $table->integer('field_type')->default(0);
             $table->integer('sequence');
             $table->boolean('mandatory');

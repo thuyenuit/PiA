@@ -29,7 +29,7 @@
                 ajax: '{{ route('field_groups.index') }}',
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
-                    {data: 'label_locale', name: 'label_locale'},
+                    {data: 'locale_key', name: 'locale_key'},
                     {data: 'sequence', name: 'sequence', className: 'text-center'},
                     {data: 'action', name: 'action', orderable: false, searchable: false, className: 'col-action'},
                 ],

@@ -11,6 +11,8 @@ use App\ViewModels\FieldViewModel;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Spatie\TranslationLoader\LanguageLine;
 use Yajra\DataTables\Facades\DataTables;
@@ -29,8 +31,8 @@ class FieldsController extends Controller
         if ($request->ajax()) {
             $data = Field::select('fields.id',
                 'fields.name as field_name',
-                'fields.label_locale as label_locale',
-                'field_groups.label_locale as field_group_name',
+                'fields.locale_key as locale_key',
+                'field_groups.name as field_group_name',
                 'fields.sequence as field_sequence',
                 'field_groups.sequence as field_group_sequence',
                 'fields.mandatory')
@@ -98,10 +100,10 @@ class FieldsController extends Controller
         $field = new FieldViewModel();
         $field->show_in_portal = true;
         $field->show_in_report = true;
-        $array_field_groups = FieldGroup::select('id', "label_locale", 'sequence')
+        $array_field_groups = FieldGroup::select('id', 'name', 'sequence')
             ->orderBy('sequence')
-            ->orderBy('label_locale')
-            ->pluck('label_locale', 'id')->toArray();
+            ->orderBy('name')
+            ->pluck('name', 'id')->toArray();
         $array_field_types = config('constants.FIELD_TYPE_ARRAY');
         return view('fields.create', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
@@ -116,7 +118,7 @@ class FieldsController extends Controller
     {
         $request->validated();
         $name = $request['name'];
-        $label_locale = $request['label_locale'];
+        $locale_key = $request['locale_key'];
         $field_group_id = (int)$request->get('field_group');
         $field_type = (int)$request->get('field_type');
         $default_value = $request['default_value'];
@@ -163,9 +165,11 @@ class FieldsController extends Controller
                 break;
         }
 
+        DB::beginTransaction();
+
         Field::create([
             'name' => $name,
-            'label_locale' => $label_locale,
+            'locale_key' => $locale_key,
             'field_group_id' => $field_group_id,
             'field_type' => $field_type,
             'sequence' => $sequence,
@@ -178,11 +182,14 @@ class FieldsController extends Controller
 
         LanguageLine::create([
             'group' => 'fields',
-            'key' => $label_locale,
+            'key' => 'locale_key.' . $locale_key,
             'text' => [
                 'en' => $name,
             ],
         ]);
+        Cache::flush();
+
+        DB::commit();
 
         Session::flash('flash_message', __('fields.flash_messages.created'));
         return redirect(route('fields.index'));
@@ -215,7 +222,7 @@ class FieldsController extends Controller
         $field = new FieldViewModel();
         $field->id = $fieldDB->id;
         $field->name = $fieldDB->name;
-        $field->label_locale = $fieldDB->label_locale;
+        $field->locale_key = $fieldDB->locale_key;
         $field->field_group_id = $fieldDB->field_group_id;
         $field->field_type = $fieldDB->field_type;
         $field->sequence = $fieldDB->sequence;
@@ -245,10 +252,10 @@ class FieldsController extends Controller
                 break;
         }
 
-        $array_field_groups = FieldGroup::select('id', "label_locale", 'sequence')
+        $array_field_groups = FieldGroup::select('id', 'locale_key', 'sequence')
             ->orderBy('sequence')
-            ->orderBy('label_locale')
-            ->pluck('label_locale', 'id')->toArray();
+            ->orderBy('locale_key')
+            ->pluck('locale_key', 'id')->toArray();
         $array_field_types = config('constants.FIELD_TYPE_ARRAY');
         return view('fields.edit', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }
@@ -264,7 +271,7 @@ class FieldsController extends Controller
     {
         $request->validated();
         $name = $request['name'];
-        $label_locale = $request['label_locale'];
+        $locale_key = $request['locale_key'];
         $field_group_id = (int)$request->get('field_group');
         $field_type = (int)$request->get('field_type');
         $default_value = $request['default_value'];
@@ -312,32 +319,46 @@ class FieldsController extends Controller
         }
 
         $field = Field::findOrFail($id);
-        $old_label_locale = $field->label_locale;
+        $old_locale_key = $field->locale_key;
+
+        DB::beginTransaction();
+
+        $field->update([
+            'name' => $name,
+            'locale_key' => $locale_key,
+            'field_group_id' => $field_group_id,
+            'field_type' => $field_type,
+            'sequence' => $sequence,
+            'mandatory' => $mandatory,
+            'show_in_report' => $show_in_report,
+            'show_in_portal' => $show_in_portal,
+            'setting' => json_encode($setting)
+        ]);
 
         $language_line = LanguageLine::where('group', 'fields')
-            ->where('key', $old_label_locale)
+            ->where('key', $old_locale_key)
             ->first();
 
-        if (!empty($language_line)) {
-            $field->update([
-                'name' => $name,
-                'label_locale' => $label_locale,
-                'field_group_id' => $field_group_id,
-                'field_type' => $field_type,
-                'sequence' => $sequence,
-                'mandatory' => $mandatory,
-                'show_in_report' => $show_in_report,
-                'show_in_portal' => $show_in_portal,
-                'setting' => json_encode($setting)
+        if (empty($language_line)) {
+            LanguageLine::create([
+                'group' => 'fields',
+                'key' => 'locale_key.' . $locale_key,
+                'text' => [
+                    'en' => $name,
+                ],
             ]);
-
+        } else {
             $language_line->update([
-                'key' => $label_locale,
+                'key' => 'locale_key.' . $locale_key,
                 'text' => [
                     'en' => $name,
                 ],
             ]);
         }
+        Cache::flush();
+
+        DB::commit();
+
         Session::flash('flash_message', __('fields.flash_messages.updated'));
         return redirect(route('fields.index'));
     }

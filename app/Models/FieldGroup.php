@@ -29,7 +29,7 @@ class FieldGroup extends Model
      */
     protected $fillable = [
         'name',
-        'label_locale',
+        'locale_key',
         'sequence'
     ];
 

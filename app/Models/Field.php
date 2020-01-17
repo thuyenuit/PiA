@@ -30,7 +30,7 @@ class Field extends Model
     protected $fillable = [
         'name',
         'field_group_id',
-        'label_locale',
+        'locale_key',
         'field_type',
         'sequence',
         'mandatory',

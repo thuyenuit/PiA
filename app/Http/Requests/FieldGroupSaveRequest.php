@@ -26,7 +26,8 @@ class FieldGroupSaveRequest extends FormRequest
     {
         $id = Request::instance()->id;
         return [
-            'label_locale' => 'required|max:191|unique:field_groups,label_locale,' . $id . ',id',
+            'name' => 'required|max:191|unique:fields,name,' . $id . ',id',
+            'locale_key' => 'required|max:191|unique:field_groups,locale_key,' . $id . ',id',
             'sequence' => 'required|integer|min:0',
         ];
     }

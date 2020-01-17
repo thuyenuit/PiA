@@ -27,10 +27,18 @@ class FieldSaveRequest extends FormRequest
         $id = Request::instance()->id;
         return [
             'name' => 'required|max:191|unique:fields,name,' . $id . ',id',
-            'label_locale' => 'required|max:191|unique:fields,label_locale,' . $id . ',id',
+            'locale_key' => 'required|max:191|unique:fields,locale_key,' . $id . ',id',
             'field_group' => 'required|integer',
             'field_type' => 'required|integer',
             'sequence' => 'required|integer|min:0',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'name.required' => 'A title is required',
+            'locale_key.required'  => 'A message is required',
         ];
     }
 }

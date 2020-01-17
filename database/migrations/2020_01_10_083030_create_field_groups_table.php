@@ -15,7 +15,8 @@ class CreateFieldGroupsTable extends Migration
     {
         Schema::create('field_groups', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('label_locale');
+            $table->string('name');
+            $table->string('locale_key');
             $table->integer('sequence');
             $table->timestamps();
         });

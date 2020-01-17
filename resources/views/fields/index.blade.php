@@ -10,7 +10,7 @@
                     <tr>
                         <th>@lang('validation.attributes.row_index')</th>
                         <th>@lang('validation.attributes.name')</th>
-                        <th>@lang('validation.attributes.label_locale')</th>
+                        <th>@lang('validation.attributes.locale_key')</th>
                         <th>@lang('validation.attributes.field_group')</th>
                         <th class="col-action">@lang('validation.attributes.action')</th>
                     </tr>
@@ -31,7 +31,7 @@
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                     {data: 'field_name', name: 'field_name',},
-                    {data: 'label_locale', name: 'label_locale'},
+                    {data: 'locale_key', name: 'locale_key'},
                     {data: 'field_group_name', name: 'field_group_name', className: 'text-center'},
                     {data: 'action', name: 'action', orderable: false, searchable: false, className: 'col-action'},
                 ],

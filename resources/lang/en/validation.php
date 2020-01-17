@@ -116,7 +116,8 @@ return [
     'uploaded' => 'The :attribute failed to upload.',
     'url' => 'The :attribute format is invalid.',
     'uuid' => 'The :attribute must be a valid UUID.',
-
+    'basic' => 'Basic',
+    'field_group_1' => 'Field Group 1',
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -168,8 +169,8 @@ return [
         'is_primary' => 'Is Primary',
         'key' => 'Key',
         'label' => 'Label',
-        'label_locale' => 'Label Locale',
         'lang_key' => 'Language Code',
+        'locale_key' => 'Locale Key',
         'login_image' => 'Login Image',
         'mandatory' => 'Mandatory',
         'max_length' => 'Max Length',

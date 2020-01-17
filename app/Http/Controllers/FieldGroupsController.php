@@ -6,10 +6,14 @@ use App\Helpers\CommonHelper;
 use App\Http\Requests\FieldGroupSaveRequest;
 use App\Models\Field;
 use App\Models\FieldGroup;
+use App\Models\Services;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Spatie\TranslationLoader\LanguageLine;
 use Yajra\DataTables\Facades\DataTables;
 
 class FieldGroupsController extends Controller
@@ -24,8 +28,8 @@ class FieldGroupsController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $datas = FieldGroup::latest()->select('id', "label_locale", 'sequence')->get();
-            return DataTables::of($datas)
+            $data = FieldGroup::latest()->get();
+            return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
                     $btnEdit = CommonHelper::generateButtonEdit(route('field_groups.edit', $row));
@@ -84,7 +88,23 @@ class FieldGroupsController extends Controller
     public function store(FieldGroupSaveRequest $request)
     {
         $request->validated();
+
+        DB::beginTransaction();
+
         FieldGroup::create($request->all());
+
+        // Create Language Line
+        LanguageLine::create([
+            'group' => 'field_groups',
+            'key' => 'locale_key.' . $request->locale_key,
+            'text' => [
+                'en' => $request->name,
+            ],
+        ]);
+        Cache::flush();
+
+        DB::commit();
+
         Session::flash('flash_message', __('field_groups.flash_messages.created'));
         return redirect(route('field_groups.index'));
     }
@@ -126,7 +146,37 @@ class FieldGroupsController extends Controller
     public function update(FieldGroupSaveRequest $request, $id)
     {
         $request->validated();
-        FieldGroup::findOrFail($id)->update($request->all());
+
+        $field_group = Services::findOrFail($id);
+        $old_locale_key = $field_group->locale_key;
+
+        DB::beginTransaction();
+
+        $field_group->update($request->all());
+
+        $language_line = LanguageLine::where('group', 'field_groups')
+            ->where('key', 'locale_key.' . $old_locale_key)
+            ->first();
+
+        if (empty($language_line)) {
+            LanguageLine::create([
+                'group' => 'field_groups',
+                'key' => 'locale_key.' . $request->locale_key,
+                'text' => [
+                    'en' => $request->name,
+                ],
+            ]);
+        } else {
+            $language_line->update([
+                'key' => 'locale_key.' . $request->locale_key,
+                'text' => [
+                    'en' => $request->name,
+                ],
+            ]);
+        }
+        Cache::flush();
+
+        DB::commit();
 
         Session::flash('flash_message', __('field_groups.flash_messages.updated'));
         return redirect(route('field_groups.index'));
@@ -146,7 +196,17 @@ class FieldGroupsController extends Controller
             return redirect(route('field_groups.index'));
         }
 
-        FieldGroup::findOrFail($id)->delete();
+        DB::beginTransaction();
+
+        $field_group = FieldGroup::findOrFail($id);
+        $field_group->delete();
+
+        // Delete Language Lines
+        LanguageLine::where('group', 'field_groups')->where('key', 'locale_key.' . $field_group->locale_key)->delete();
+        Cache::flush();
+
+        DB::commit();
+
         Session::flash('flash_message', __('field_groups.flash_messages.deleted'));
         return redirect(route('field_groups.index'));
     }

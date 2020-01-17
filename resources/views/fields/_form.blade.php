@@ -14,11 +14,11 @@
 
             <div class="form-group col-md-6 m-t-20">
                 <label>
-                    @lang('validation.attributes.label_locale')
+                    @lang('validation.attributes.locale_key')
                     <span class="text-danger">*</span>
                 </label>
-                {!! Form::text('label_locale', $field->label_locale, ['class' => 'form-control', 'maxlength' => '191']) !!}
-                {!! $errors->first('label_locale', '<p class="text-danger">:message</p>') !!}
+                {!! Form::text('locale_key', $field->locale_key, ['class' => 'form-control', 'maxlength' => '191']) !!}
+                {!! $errors->first('locale_key', '<p class="text-danger">:message</p>') !!}
             </div>
 
             <div class="form-group col-md-6 m-t-20">
@@ -122,14 +122,23 @@
     <script type="text/javascript">
         $(document).ready(function () {
             let field_type = $('.card-body select[name="field_type"]').val();
-            if (field_type == {{ config('constants.FIELD_TYPE')['single_choice'] }}
-                || field_type == {{ config('constants.FIELD_TYPE')['multi_choice'] }}) {
-                $('.items_value').show();
+            $('.max_length').hide();
+            $('.items_value').hide();
+            if (field_type == {{ config('constants.FIELD_TYPE')['string'] }}
+                || field_type == {{ config('constants.FIELD_TYPE')['single_choice'] }}
+                || field_type == {{ config('constants.FIELD_TYPE')['multi_choice'] }}
+                || field_type == {{ config('constants.FIELD_TYPE')['data_source'] }}) {
+                if (field_type == {{ config('constants.FIELD_TYPE')['string'] }} ) {
+                    $('.max_length').show();
+                } else if (field_type == {{ config('constants.FIELD_TYPE')['single_choice'] }}
+                    || field_type == {{ config('constants.FIELD_TYPE')['multi_choice'] }}) {
+                    $('.items_value').show();
+                }
             }
         });
 
-        $('input[name="label_locale"]').on('input', function (e) {
-            $(this).val($(this).val().replace(/[^A-Za-z0-9]/g, ''));
+        $('input[name="locale_key"]').on('input', function (e) {
+            $(this).val($(this).val().replace(/[^A-Za-z0-9_]/g, ''));
         });
 
         function onChangeFieldType(item) {
@@ -147,13 +156,13 @@
                     || $(item).val() == {{ config('constants.FIELD_TYPE')['multi_choice'] }}) {
                     $('.items_value').show();
                 }
-                $(".default_value_input").html('<input class="form-control" name="deafault_value" type="text">');
+                $(".default_value_input").html('<input class="form-control" name="default_value" type="text">');
             } else if ($(item).val() == {{ config('constants.FIELD_TYPE')['number'] }} ) {
-                $(".default_value_input").html('<input class="form-control" name="deafault_value" type="text" onkeypress="return isNumber(event)"">');
+                $(".default_value_input").html('<input class="form-control" name="default_value" type="text" onkeypress="return isNumber(event)"">');
             } else if ($(item).val() == {{ config('constants.FIELD_TYPE')['boolean'] }} ) {
-                $(".default_value_input").html('<select name="deafault_value" class="form-control"><option value="True">True</option><option value="False">False</option></select>');
+                $(".default_value_input").html('<select class="form-control" name="default_value" ><option value="True">True</option><option value="False">False</option></select>');
             } else if ($(item).val() == {{ config('constants.FIELD_TYPE')['date'] }}) {
-                $(".default_value_input").html('<input class="form-control" name="deafault_value" type="date">');
+                $(".default_value_input").html('<input class="form-control" name="default_value" type="date">');
             }
         }
     </script>

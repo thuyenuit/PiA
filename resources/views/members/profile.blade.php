@@ -26,7 +26,7 @@
                     <div class="tab-content">
                         <div class="tab-pane active">
                             @if($currentTab == 'info')
-                                {!! Form::model($user, ['method' => 'PATCH', 'url' => 'admin/my-profile']) !!}
+                                {!! Form::model($user, ['method' => 'POST', 'url' => route('my_profile')]) !!}
                                 @include ('members._edit_profile')
                                 {!! Form::close() !!}
                             @elseif($currentTab == $tabs['password'])

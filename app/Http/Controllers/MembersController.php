@@ -6,17 +6,22 @@ use App\Helpers\CommonHelper;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
+use App\Http\Requests\MemberUpdateRequest;
 use App\Models\Member;
 use App\Models\User;
 use App\Models\FieldGroup;
 use App\Models\Field;
+use App\Models\FieldMember;
+use Spatie\TranslationLoader\LanguageLine;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Arr;
 
 class MembersController extends Controller
 {
@@ -167,6 +172,8 @@ class MembersController extends Controller
             return redirect(route('members.index'));
         }
 
+        // TODO: set inactive only
+
         User::findOrFail($id)->delete();
 
         Session::flash('flash_message', __('members.flash_messages.deleted'));
@@ -180,7 +187,6 @@ class MembersController extends Controller
      */
     public function profile(Request $request)
     {
-      
         $breadcrumbs = [
             'title' => __('members.breadcrumbs.profile'),
             'links' => [
@@ -206,43 +212,71 @@ class MembersController extends Controller
         $tabs = config('constants.PROFILE_TABS');
         $currentTab = $request->get('tab');
         if (empty($currentTab) || !in_array($currentTab, array_values($tabs))) {
-            $currentTab = config('constants.PROFILE_TABS')['info'];         
+            $currentTab = config('constants.PROFILE_TABS')['info'];
         }
 
         $field_groups = new FieldGroup();
         $fields = new Field();
         if ($currentTab == config('constants.PROFILE_TABS')['info']) {
-            $field_groups = FieldGroup::select('id', "label_locale", 'sequence')->orderBy('sequence')->get();
+            $field_groups = FieldGroup::select('id', "name", 'sequence')->orderBy('sequence')->get();
+
             $fields = Field::select('fields.id',
-                                    'fields.name as field_name',
-                                    'fields.field_group_id',
-                                    'fields.label_locale as field_locale_key',
-                                    'fields.field_type',
-                                    'fields.sequence as field_sequence',
-                                    'fields.mandatory',
-                                    'fields.setting',
-                                    'field_members.value',
-                                    'field_groups.label_locale as field_group_name',
-                                    'field_groups.sequence as field_group_sequence',)
-                            ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
-                            ->leftJoin('field_members', function($join){
-                                $join->on('fields.id', '=', 'field_members.field_id') 
-                                    ->where('field_members.member_id', '=', Auth::id());
-                            })
-                            ->where('fields.active', true)
-                            ->where('fields.show_in_portal', true)
-                            ->orderBy('field_group_sequence')
-                            ->orderBy('field_group_name')
-                            ->orderBy('field_sequence')
-                            ->orderBy('field_name')
-                            ->get();
-                            
+                'fields.name as field_name',
+                'fields.field_group_id',
+                'fields.locale_key as field_locale_key',
+                'fields.field_type',
+                'fields.sequence as field_sequence',
+                'fields.mandatory',
+                'fields.setting',
+                'field_members.value')
+                ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
+                ->leftJoin('field_members', function ($leftJoin) {
+                    $leftJoin->on('field_members.field_id', '=', 'fields.id')
+                        ->where('field_members.member_id', '=', Auth::id());
+                })
+                ->where('fields.active', true)
+                ->where('fields.show_in_portal', true)
+                ->orderBy('field_sequence')
+                ->orderBy('field_name')
+                ->get();
+
+            $lang = App::getLocale();
+            $languageLines = LanguageLine::select('group', 'key', "text")
+                ->where('language_lines.group', '=', 'fields')
+                ->where('language_lines.key', 'like', 'locale_key.%')
+                ->orderBy('key')
+                ->get();
+
             foreach ($fields as $field) {
-                $field->setting = json_decode($field->setting);              
+                foreach ($languageLines as $languageLine) {
+                    if ($languageLine->key == ('locale_key.' . $field->field_locale_key)
+                        && !is_null($languageLine->text)
+                        && Arr::exists($languageLine->text, $lang)) {
+                        $field->field_name = $languageLine->text[$lang];
+                    }
+                }
+
+                if (!is_null($field->setting)) {
+                    $field->setting = json_decode($field->setting);
+                    $field->default = $field->setting->default_value;
+                    switch ($field->field_type) {
+                        case (config('constants.FIELD_TYPE')['string']):
+                            $field->max_length = $field->setting->max_length;
+                            break;                   
+                        case (config('constants.FIELD_TYPE')['single_choice']):
+                        case (config('constants.FIELD_TYPE')['multi_choice']):
+                            $field->items = [];
+                            if (!isset($field->setting->items->a)) {
+                                $field->items = json_decode($field->setting->items);
+                            }
+                            break;
+                        case (config('constants.FIELD_TYPE')['data_source']):
+
+                            break;
+                    }
+                }
             }
         }
-
-        
 
         return view('members.profile', compact('breadcrumbs',
             'user',
@@ -262,14 +296,66 @@ class MembersController extends Controller
     public function updateProfile(ProfileUpdateRequest $request)
     {
         $request->validated();
+        (isset($request->status)) ? $request->status = true : $request->status = false;
+
         $user = Auth::user();
-        $member = $user->member;
         User::findOrFail($user->id)->update(['name' => $request->name]);
-        User::findOrFail($user->id)->update(['email' => $request->email]);
-        Member::findOrFail($member->id)->update(['address' => $request->address]);
-        Member::findOrFail($member->id)->update(['town' => $request->town]);
-        Member::findOrFail($member->id)->update(['phone' => $request->phone]);
-        //$member = Auth::user()->update($requestData);
+
+        $member = Member::where('user_id', $user->id)->first();
+        if (is_null($member)) {
+            $idMember = Member::create(
+                [
+                    'user_id' => $user->id,
+                    'status' => $request->status,
+                    'birthday' => $request->birthday,
+                    'phone' => $request->phone,
+                    'mobile_phone' => $request->mobile_phone,
+                    'address' => $request->address,
+                    'zip_code' => $request->zip_code,
+                    'town' => $request->town,
+                    'pilot_id' => $request->pilot_id,
+                    'fai_no' => $request->fai_no,
+                    'fai_year' => $request->fai_year,
+                    'd_no' => $request->d_no,
+                ]
+            )->id;
+        } else {
+            Member::findOrFail($member->id)->update(
+                [
+                    'status' => $request->status,
+                    'birthday' => $request->birthday,
+                    'phone' => $request->phone,
+                    'mobile_phone' => $request->mobile_phone,
+                    'address' => $request->address,
+                    'zip_code' => $request->zip_code,
+                    'town' => $request->town,
+                    'pilot_id' => $request->pilot_id,
+                    'fai_no' => $request->fai_no,
+                    'fai_year' => $request->fai_year,
+                    'd_no' => $request->d_no,
+                ]
+            );
+            $idMember = $member->id;
+        }
+
+        $requestData = $request->all();
+        $fieldLocaleKeys = Field::select('id', 'locale_key')
+            ->whereIn('locale_key', array_keys($requestData))
+            ->pluck('locale_key', 'id')->toArray();
+
+        if (!empty($fieldLocaleKeys)) {
+            foreach ($fieldLocaleKeys as $key => $fieldLocaleKey) {
+                if (in_array($fieldLocaleKey, array_keys($requestData)) && !empty($requestData[$fieldLocaleKey])) {
+                    FieldMember::create([
+                        'field_id' => $key,
+                        'member_id' => $idMember,
+                        'value' => $requestData[$fieldLocaleKey]
+                    ]);
+                }
+            }
+        }
+
+        Session::flash('flash_message', __('members.flash_messages.updated'));
         return redirect()->route('my_profile');
     }
 
@@ -279,10 +365,12 @@ class MembersController extends Controller
      * @param Request $request
      * @return Response
      */
+
     public function updateAvatar(Request $request)
     {
         $requestData = $request->all();
         $base64_str = substr($requestData['image'], strpos($requestData['image'], ",") + 1);
+
         if (CommonHelper::isBase64Encoded($base64_str)) {
             $fileExtension = CommonHelper::getFileExtension($requestData['image']);
             $fileName = 'avatar' . '_' . time() . '_' . rand(0, 9999999) . '.' . $fileExtension;
