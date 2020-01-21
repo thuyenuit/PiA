@@ -189,6 +189,7 @@ return [
         'show_in_report' => 'Show In Report',
         'site_favicon' => 'Site Favicon',
         'site_logo' => 'Site Logo',
+        'status' => 'Status',
         'text' => 'Text',
         'town' => 'Town',
         'user_id' => 'User',

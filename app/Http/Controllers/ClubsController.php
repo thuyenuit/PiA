@@ -6,6 +6,7 @@ use App\Helpers\ClubsHelper;
 use App\Helpers\CommonHelper;
 use App\Http\Requests\ClubSaveRequest;
 use App\Models\Club;
+use App\Models\Services;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,7 +27,7 @@ class ClubsController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Club::select('id', 'name', 'region', 'address', 'email')->orderBy('created_at', 'desc')->get();
+            $data = Club::latest()->get();
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
@@ -75,8 +76,9 @@ class ClubsController extends Controller
         ];
         $club = new Club();
         $users = [];
+        $services = Services::pluck('name','locale_key');
 
-        return view('clubs.create', compact('breadcrumbs', 'users', 'club'));
+        return view('clubs.create', compact('breadcrumbs', 'users', 'club', 'services'));
     }
 
     /**
@@ -122,7 +124,7 @@ class ClubsController extends Controller
                 [
                     'text' => __('layouts.sidebar.clubs'),
                     'active' => false,
-                    'href' => route('clubs.index'),
+                    'href' => route('clubs.index')
                 ],
                 [
                     'text' => $club->name,
@@ -158,9 +160,11 @@ class ClubsController extends Controller
         ];
 
         $club = Club::findOrFail($id);
-        $users = User::pluck('name', 'id');
+        $services = Services::pluck('name','locale_key');
+        $users = User::join('clubs_users','clubs_users.user_id','=','users.id')->where('clubs_users.club_id',$id)
+            ->pluck('users.name as name', 'users.id as id');
 
-        return view('clubs.edit', compact('breadcrumbs', 'users', 'club'));
+        return view('clubs.edit', compact('breadcrumbs', 'users', 'services', 'club'));
     }
 
     /**
@@ -188,6 +192,7 @@ class ClubsController extends Controller
         Club::findOrFail($id)->update($requestData);
 
         Session::flash('flash_message', __('clubs.flash_messages.updated'));
+
         return redirect(route('clubs.index'));
     }
 
@@ -199,6 +204,8 @@ class ClubsController extends Controller
      */
     public function destroy($id)
     {
+        // TODO: check club member
+
         Club::findOrFail($id)->delete();
 
         Session::flash('flash_message', __('clubs.flash_messages.deleted'));

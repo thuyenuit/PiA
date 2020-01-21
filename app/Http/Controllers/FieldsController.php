@@ -147,6 +147,7 @@ class FieldsController extends Controller
             case config('constants.FIELD_TYPE')['single_choice']:
             case config('constants.FIELD_TYPE')['multi_choice']:
                 if (!isset($items->a)) {
+                    $items = trim($items);
                     $arrayItems = explode(",", $items);
                     $setting = [
                         'default_value' => $default_value,
@@ -155,6 +156,7 @@ class FieldsController extends Controller
                 } else {
                     $setting = [
                         'default_value' => $default_value,
+                        'items' => [],
                     ];
                 }
                 break;

@@ -17,5 +17,15 @@
             placeholder: "@lang('clubs.placeholder.select2-multiple')"
         });
         $('.select2-single').select2();
+
+        $(document).ready(function() {
+            $('#charge_club_of_quota').change(function () {
+                if (this.checked) {
+                    $('#monthly_payment').fadeIn('slow');
+                } else {
+                    $('#monthly_payment').fadeOut('slow');
+                }
+            });
+        });
     </script>
 @endsection

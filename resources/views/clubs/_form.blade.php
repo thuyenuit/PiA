@@ -18,7 +18,7 @@
                     <label>@lang('validation.attributes.aircraft_type')</label>
                     <div class="input-group">
                         <div class="demo-checkbox">
-                            @foreach(config('constants.AIRCRAFT_TYPE') as $key => $value)
+                            @foreach($services as $key => $value)
                                 <input type="checkbox" name="aircraft_type[]" value="{{$value}}"
                                        {{ !empty($club->aircraft_type) && in_array($value, $club->aircraft_type) ? 'checked' : '' }}
                                        class="filled-in form-control" id="{{$key}}">
@@ -113,7 +113,7 @@
                             <div class="form-group cf-field" data-name="club_admin">
                                 <label>@lang('validation.attributes.club_admin_ids')</label>
                                 <div class="input-group">
-                                    {!! Form::select('club_admin_ids[]', $users, null, ['class' => 'form-control select2-multiple', 'multiple' => 'multiple']) !!}
+                                    {!! Form::select('club_admin_ids[]', $users, $club->club_admin_ids, ['class' => 'form-control select2-multiple', 'multiple' => 'multiple']) !!}
                                 </div>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
                                     <select class="form-control select2-single" name="chef_instructor_id">
                                         <option value="">@lang('clubs.placeholder.select2-single')</option>
                                         @foreach($users as $key => $value)
-                                            <option value="{{$key}}">{{$value}}</option>
+                                            <option value="{{$key}}" {{ $key == $club->chef_instructor_id ? 'selected' : '' }} >{{$value}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -134,7 +134,7 @@
                             <div class="form-group cf-field" data-name="club_contact">
                                 <label>@lang('validation.attributes.club_contact_ids')</label>
                                 <div class="input-group">
-                                    {!! Form::select('club_contact_ids[]', $users, null, ['class' => 'form-control select2-multiple', 'multiple' => 'multiple']) !!}
+                                    {!! Form::select('club_contact_ids[]', $users, $club->club_contact_ids, ['class' => 'form-control select2-multiple', 'multiple' => 'multiple']) !!}
                                 </div>
                             </div>
                         </div>
@@ -161,10 +161,10 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="form-group cf-field" data-name="monthly_payment">
+                            <div class="form-group cf-field" id="monthly_payment" data-name="monthly_payment" {!! $club->charge_club_of_quota == false ? 'style="display: none;"': '' !!}>
                                 <label>@lang('validation.attributes.monthly_payment')</label>
                                 <div class="input-group">
-                                    <input type="text" name="monthly_payment" value="" class="form-control">
+                                    <input type="text" name="monthly_payment" value="{!! $club->monthly_payment !!}" class="form-control">
                                 </div>
                                 {!! $errors->first('monthly_payment', '<div class="text-danger">:message</div>') !!}
                             </div>

@@ -17,7 +17,7 @@ class CreateFieldMembersTable extends Migration
             $table->bigIncrements('id');
             $table->integer('field_id');
             $table->integer('member_id');
-            $table->integer('value');
+            $table->string('value');
             $table->timestamps();
         });
     }

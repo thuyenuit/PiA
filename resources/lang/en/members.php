@@ -17,6 +17,7 @@ return [
         'created' => 'Created member successful',
         'deleted' => 'Deleted member successful',
         'updated' => 'Updated member successful',
+        'updated_profile' => 'Updated profile successful',
     ],
 
 ];

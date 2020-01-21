@@ -172,10 +172,24 @@
                                     </label>
                                     
                                     <div class="input-group field-multi">
+
+                                    
                                         <select name="{{$field->field_locale_key}}" class="form-control"> 
-                                            <option selected="selected" value="">{{config('constants.PLACEHOLDER_TYPE')['choose']}}</option>                                     
+                                            <option value="">{{config('constants.PLACEHOLDER_TYPE')['choose']}}</option>                                     
                                             @foreach($field->items as $item => $value)
-                                                <option value="{{$value}}">{{$value}}</option>
+                                                @if(!is_null($field->value))                                       
+                                                    @if($field->value == $value)                        
+                                                        <option selected="selected" value="{{$value}}">{{$value}}</option>                                                 
+                                                    @else                         
+                                                        <option value="{{$value}}">{{$value}}</option>
+                                                    @endif                                              
+                                                @else                                              
+                                                    @if($field->default == $value)                                                   
+                                                        <option selected="selected" value="{{$value}}">{{$value}}</option>
+                                                    @else
+                                                        <option value="{{$value}}">{{$value}}</option>
+                                                    @endif
+                                                @endif                                               
                                             @endforeach
                                         </select>
                                     </div>
@@ -190,7 +204,7 @@
                                     </label>
                                     
                                     <div class="input-group field-multi">
-                                        {!! Form::select($field->field_locale_key, $field->items, null, [
+                                        {!! Form::select($field->field_locale_key . '[]', $field->items, null, [
                                             'class' => 'form-control select2-multiple', 
                                             'multiple' => 'multiple'
                                         ]) !!}
@@ -224,8 +238,6 @@
             //placeholder: ""
         });
         $('.select2-single').select2();
-
-        $('.field-multi').find('.select2-selection.select2-selection--multiple').addClass(' form-control');
     </script>
 @endsection
 

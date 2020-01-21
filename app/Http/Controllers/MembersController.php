@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class MembersController extends Controller
 {
@@ -218,6 +220,7 @@ class MembersController extends Controller
         $field_groups = new FieldGroup();
         $fields = new Field();
         if ($currentTab == config('constants.PROFILE_TABS')['info']) {
+
             $field_groups = FieldGroup::select('id', "name", 'sequence')->orderBy('sequence')->get();
 
             $fields = Field::select('fields.id',
@@ -228,7 +231,9 @@ class MembersController extends Controller
                 'fields.sequence as field_sequence',
                 'fields.mandatory',
                 'fields.setting',
-                'field_members.value')
+                'field_members.value',
+                'field_groups.name as field_group_name',
+                'field_groups.sequence as field_group_sequence',)
                 ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
                 ->leftJoin('field_members', function ($leftJoin) {
                     $leftJoin->on('field_members.field_id', '=', 'fields.id')
@@ -239,6 +244,12 @@ class MembersController extends Controller
                 ->orderBy('field_sequence')
                 ->orderBy('field_name')
                 ->get();
+
+            /*$field_groups = $fields->map->only(['field_group_id',
+                                            'field_group_name', 
+                                            'field_group_sequence']);*/
+
+            //dd($field_groups);
 
             $lang = App::getLocale();
             $languageLines = LanguageLine::select('group', 'key', "text")
@@ -268,6 +279,7 @@ class MembersController extends Controller
                             $field->items = [];
                             if (!isset($field->setting->items->a)) {
                                 $field->items = json_decode($field->setting->items);
+                                $_SESSION['counter'] =  $field->items;
                             }
                             break;
                         case (config('constants.FIELD_TYPE')['data_source']):
@@ -297,6 +309,8 @@ class MembersController extends Controller
     {
         $request->validated();
         (isset($request->status)) ? $request->status = true : $request->status = false;
+
+        DB::beginTransaction();
 
         $user = Auth::user();
         User::findOrFail($user->id)->update(['name' => $request->name]);
@@ -342,10 +356,24 @@ class MembersController extends Controller
         $fieldLocaleKeys = Field::select('id', 'locale_key')
             ->whereIn('locale_key', array_keys($requestData))
             ->pluck('locale_key', 'id')->toArray();
-
+       
         if (!empty($fieldLocaleKeys)) {
+
+            $array_field_ids = array();
+            foreach ($fieldLocaleKeys as $key => $fieldLocaleKey) {
+                array_push($array_field_ids, $key);
+            }
+            
+            FieldMember::where('member_id', $user->id)->whereIn('field_id', $array_field_ids)->delete();
+                    
             foreach ($fieldLocaleKeys as $key => $fieldLocaleKey) {
                 if (in_array($fieldLocaleKey, array_keys($requestData)) && !empty($requestData[$fieldLocaleKey])) {
+                    
+                    if($fieldLocaleKey == 'religion')
+                    {
+                        dd($requestData[$fieldLocaleKey], $_SESSION['counter']);
+                    }
+                    
                     FieldMember::create([
                         'field_id' => $key,
                         'member_id' => $idMember,
@@ -355,7 +383,10 @@ class MembersController extends Controller
             }
         }
 
-        Session::flash('flash_message', __('members.flash_messages.updated'));
+        Cache::flush();
+        DB::commit();
+
+        Session::flash('flash_message', __('members.flash_messages.updated_profile'));
         return redirect()->route('my_profile');
     }
 
