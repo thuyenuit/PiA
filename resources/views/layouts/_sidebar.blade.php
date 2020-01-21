@@ -84,6 +84,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('services.index') }}">
+                                @lang('layouts.sidebar.settings.services')
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('payment_methods') }}">
                                 @lang('layouts.sidebar.settings.payment_methods')
                             </a>

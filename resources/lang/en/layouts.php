@@ -28,6 +28,7 @@ return [
             'field_groups' => 'Field Groups',
             'fields' => 'Fields',
             'groups' => 'Groups',
+            'services' => 'Services',
             'payment_methods' => 'Payment Methods',
             'translations' => 'Translations',
         ],

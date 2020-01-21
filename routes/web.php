@@ -50,6 +50,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('groups', 'GroupsController');
     Route::resource('groups.users', 'GroupsUsersController')->except(['edit', 'update', 'show']);
 
+    // Services management
+    Route::resource('services', 'ServicesController');
+    
     // Translations management
     Route::resource('translations', 'TranslationsController');
     Route::post('translations/{id}/locale', 'TranslationsController@updateLocale')->name('translations.locale');

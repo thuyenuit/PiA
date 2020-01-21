@@ -39,6 +39,7 @@ class Member extends Model
         'fai_no',
         'fai_year',
         'd_no',
+        'main_club_id'
     ];
 
     public function user()
