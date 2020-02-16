@@ -25,7 +25,7 @@
                         {!! Form::hidden('group', $currentTab) !!}
                         <div class="form-material row">
                             @foreach(CommonHelper::arrayKeysFlatten(__($currentTab), null) as $key)
-                                <div class="form-group col-md-12 m-t-20">
+                                <div class="form-group col-md-6 m-t-20">
                                     <label class="form-control-label">
                                         {{ $key }}
                                     </label>

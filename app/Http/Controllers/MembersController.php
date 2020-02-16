@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\FieldGroup;
 use App\Models\Field;
 use App\Models\FieldMember;
+use App\Models\Club;
 use Spatie\TranslationLoader\LanguageLine;
 use Exception;
 use Illuminate\Http\Request;
@@ -85,8 +86,11 @@ class MembersController extends Controller
         ];
 
         $user = new User();
+        $array_clubs = Club::select('id', 'name')
+            ->orderBy('name')
+            ->pluck('name', 'id')->toArray();
 
-        return view('members.create', compact('breadcrumbs', 'user'));
+        return view('members.create', compact('breadcrumbs', 'user', 'array_clubs'));
     }
 
     /**
@@ -100,7 +104,19 @@ class MembersController extends Controller
         $request->validated();
         $requestData = $request->all();
         $requestData['password'] = bcrypt($request->password);
-        User::create($requestData);
+        $main_club = !empty($requestData['main_club']) ? (int)$requestData['main_club'] : 0;
+        $status = $main_club > 0 ? 1 : 0;
+
+        DB::beginTransaction();
+        $user = User::create($requestData);
+        Member::create([
+            'user_id' =>$user->id,
+            'status' => $status,
+            'main_club_id' =>$main_club
+        ]);
+
+        Cache::flush();
+        DB::commit();
 
         Session::flash('flash_message', __('members.flash_messages.created'));
         return redirect(route('members.index'));
@@ -221,7 +237,7 @@ class MembersController extends Controller
         $fields = new Field();
         if ($currentTab == config('constants.PROFILE_TABS')['info']) {
 
-            $field_groups = FieldGroup::select('id', "name", 'sequence')->orderBy('sequence')->get();
+            //$field_groups = FieldGroup::select('id', "name", 'sequence')->orderBy('sequence')->get();
 
             $fields = Field::select('fields.id',
                 'fields.name as field_name',
@@ -232,11 +248,12 @@ class MembersController extends Controller
                 'fields.mandatory',
                 'fields.setting',
                 'field_members.value',
-                'field_groups.name as field_group_name',
-                'field_groups.sequence as field_group_sequence',)
+                //'field_groups.name as field_group_name',
+                'field_groups.locale_key as field_group_locale_key',
+                'field_groups.sequence as field_group_sequence')
                 ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
-                ->leftJoin('field_members', function ($leftJoin) {
-                    $leftJoin->on('field_members.field_id', '=', 'fields.id')
+                ->leftJoin('field_members', function ($fm) {
+                    $fm->on('field_members.field_id', '=', 'fields.id')
                         ->where('field_members.member_id', '=', Auth::id());
                 })
                 ->where('fields.active', true)
@@ -245,28 +262,14 @@ class MembersController extends Controller
                 ->orderBy('field_name')
                 ->get();
 
-            /*$field_groups = $fields->map->only(['field_group_id',
-                                            'field_group_name', 
-                                            'field_group_sequence']);*/
 
-            //dd($field_groups);
-
-            $lang = App::getLocale();
-            $languageLines = LanguageLine::select('group', 'key', "text")
-                ->where('language_lines.group', '=', 'fields')
-                ->where('language_lines.key', 'like', 'locale_key.%')
-                ->orderBy('key')
-                ->get();
+            $field_groups = collect($fields->map->only(['field_group_id',
+                                                        //'field_group_name',
+                                                        'field_group_locale_key',
+                                                        'field_group_sequence']))
+                        ->sortByDesc('field_group_sequence')->reverse()->unique()->toArray();
 
             foreach ($fields as $field) {
-                foreach ($languageLines as $languageLine) {
-                    if ($languageLine->key == ('locale_key.' . $field->field_locale_key)
-                        && !is_null($languageLine->text)
-                        && Arr::exists($languageLine->text, $lang)) {
-                        $field->field_name = $languageLine->text[$lang];
-                    }
-                }
-
                 if (!is_null($field->setting)) {
                     $field->setting = json_decode($field->setting);
                     $field->default = $field->setting->default_value;
@@ -368,12 +371,7 @@ class MembersController extends Controller
                     
             foreach ($fieldLocaleKeys as $key => $fieldLocaleKey) {
                 if (in_array($fieldLocaleKey, array_keys($requestData)) && !empty($requestData[$fieldLocaleKey])) {
-                    
-                    if($fieldLocaleKey == 'religion')
-                    {
-                        dd($requestData[$fieldLocaleKey], $_SESSION['counter']);
-                    }
-                    
+
                     FieldMember::create([
                         'field_id' => $key,
                         'member_id' => $idMember,
@@ -431,5 +429,25 @@ class MembersController extends Controller
                 return redirect('admin/my-profile?tab=' . User::PROFILE_TABS['password']);
             }
         }
+    }
+
+    public function testApi() {
+
+        $data = Field::select('fields.id',
+            'fields.name as field_name',
+            'fields.locale_key as locale_key',
+            'field_groups.name as field_group_name',
+            'fields.sequence as field_sequence',
+            'field_groups.sequence as field_group_sequence',
+            'fields.mandatory')
+            ->join('field_groups', 'field_groups.id', '=', 'fields.field_group_id')
+            ->where('active', true)
+            ->orderBy('field_group_sequence')
+            ->orderBy('field_group_name')
+            ->orderBy('field_sequence')
+            ->orderBy('field_name')
+            ->get();
+
+        return response()->json(['data' => $data], 200);
     }
 }

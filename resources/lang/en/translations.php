@@ -14,6 +14,7 @@ return [
         'members' => 'Members',
         'field_groups' => 'Field Groups',
         'fields' => 'Fields',
+        'services' =>'Services',
     ],
     'flash_messages' => [
         'created' => 'Language is created successfully',

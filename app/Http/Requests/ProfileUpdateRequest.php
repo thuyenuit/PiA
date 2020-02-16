@@ -47,18 +47,18 @@ class ProfileUpdateRequest extends FormRequest
          */
         $fields = Field::select('locale_key', 'field_type', 'setting')
                         ->whereIn('locale_key', array_keys($this->all()))
-                        ->where('mandatory', true)
+                        /*->where('mandatory', true)*/
                         ->get();
                         
         foreach($fields as $field)
-        {         
+        {
             if($field['field_type'] == (config('constants.FIELD_TYPE')['string']))
             {
-                $rules[$field['locale_key']] = 'required|max:'.  json_decode($field['setting'])->max_length;
+                $rules[$field['locale_key']] = ($field['mandatory'] == true ? 'required' : 'nullable'). '|max:'. json_decode($field['setting'])->max_length;
             }
             else
             {
-                $rules[$field['locale_key']] = 'required';
+                $rules[$field['locale_key']] = $field['mandatory'] == true ? 'required' : 'nullable';
             } 
         }
         return $rules;

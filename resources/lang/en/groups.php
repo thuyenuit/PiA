@@ -15,6 +15,25 @@ return [
         'organization' => 'Organization Permissions',
     ],
     'system_permissions' => [
+        'assets' => 'Assets',
+        'translations' => 'Translations',
+        'groups' => 'Groups',
+        'users' => 'Users',
+        'payment_gateway' => 'Payment gateway',
+    ],
+    'org_permissions' => [
+        'clubs' => 'Clubs',
+        'club_stats' =>'Club stats',
+        'fields' => 'Fields',
+        'field_groups' => 'Field groups',
+        'logo_icon' => 'Logo & icon',
+        'members' => 'Members',
+        'member_stats' =>'Member stats',
+        'payments' => 'Payments',
+        'payment_stats' => 'Payment stats',
+        'services' => 'Services',
+    ],
+   /* 'system_permissions' => [
         'assets_view' => 'View logo & icon',
         'assets_manage' => 'Manage logo & icon',
         'translations_view' => 'View translations',
@@ -44,5 +63,5 @@ return [
         'report_clubs' => 'Export club data',
         'report_members' => 'Export member data',
         'report_payments' => 'Export payment data',
-    ],
+    ],*/
 ];

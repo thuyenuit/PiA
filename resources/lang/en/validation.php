@@ -172,6 +172,7 @@ return [
         'lang_key' => 'Language Code',
         'locale_key' => 'Locale Key',
         'login_image' => 'Login Image',
+        'main_club' =>'Main Club',
         'mandatory' => 'Mandatory',
         'max_length' => 'Max Length',
         'mobile_phone' => 'Mobile Phone',

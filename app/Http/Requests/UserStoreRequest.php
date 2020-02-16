@@ -32,6 +32,7 @@ class UserStoreRequest extends FormRequest
             'name' => 'required|max:100',
             'email' => 'required|email|without_spaces|unique:users',
             'password' => 'required|confirmed|min:6',
+            'main_club' => 'nullable|integer'
         ];
     }
 }

@@ -35,6 +35,11 @@
                     {!! $errors->first('password_confirmation', '<p class="text-danger">:message</p>') !!}
                 </div>
             @endif
+
+            <div class="form-group col-md-6 m-t-20">
+                <label>@lang('validation.attributes.main_club')</label>
+                {!! Form::select('main_club', $array_clubs, $user->main_club_id, ['class' => 'form-control', 'placeholder' => config('constants.PLACEHOLDER_TYPE')['choose'] ]) !!}
+            </div>
         </div>
     </div>
 

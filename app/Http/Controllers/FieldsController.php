@@ -100,10 +100,17 @@ class FieldsController extends Controller
         $field = new FieldViewModel();
         $field->show_in_portal = true;
         $field->show_in_report = true;
-        $array_field_groups = FieldGroup::select('id', 'name', 'sequence')
+        $array_field_groups = FieldGroup::select('id', 'locale_key', 'sequence')
             ->orderBy('sequence')
-            ->orderBy('name')
-            ->pluck('name', 'id')->toArray();
+            ->orderBy('locale_key')
+            ->pluck('locale_key', 'id')
+            ->toArray();
+
+      /*  foreach ($array_field_groups as $item)
+        {
+            $item['locale_key'] = lang('field_groups.locale_key.'. $item['locale_key']);
+        }*/
+
         $array_field_types = config('constants.FIELD_TYPE_ARRAY');
         return view('fields.create', compact('breadcrumbs', 'field', 'array_field_groups', 'array_field_types'));
     }

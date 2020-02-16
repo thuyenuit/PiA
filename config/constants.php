@@ -44,7 +44,8 @@ return [
         'translations',
         'members',
         'field_groups',
-        'fields'
+        'fields',
+        'services',
     ],
     'PROFILE_TABS' => [
         'info' => 'info',
@@ -62,7 +63,7 @@ return [
         'LOGIN_IMAGE' => 'login_image',
         'DEFAULT_AVATAR_IMAGE' => 'default_avatar_image',
     ],
-    'SYSTEM_PERMISSIONS' => [
+    /*'SYSTEM_PERMISSIONS' => [
         'assets_view' => 'assets_view',
         'assets_manage' => 'assets_manage',
         'translations_view' => 'translations_view',
@@ -73,8 +74,15 @@ return [
         'users_manage' => 'users_manage',
         'payment_gateway_view' => 'payment_gateway_view',
         'payment_gateway_manage' => 'payment_gateway_manage',
+    ],*/
+    'SYSTEM_PERMISSIONS' => [
+        'assets' => 'assets',
+        'translations' => 'translations',
+        'groups' => 'groups',
+        'users' => 'users',
+        'payment_gateway' => 'payment_gateway',
     ],
-    'ORG_PERMISSIONS' => [
+   /* 'ORG_PERMISSIONS' => [
         'custom_fields_view' => 'custom_fields_view',
         'custom_fields_manage' => 'custom_fields_manage',
         'clubs_view' => 'clubs_view',
@@ -92,6 +100,18 @@ return [
         'report_clubs' => 'report_clubs',
         'report_members' => 'report_members',
         'report_payments' => 'report_payments',
+    ],*/
+    'ORG_PERMISSIONS' => [
+        'clubs' => 'clubs',
+        'club_stats' =>'club_stats',
+        'fields' => 'fields',
+        'field_groups' => 'field_groups',
+        'logo_icon' => 'logo_icon',
+        'members' => 'members',
+        'member_stats' =>'member_stats',
+        'payments' => 'payments',
+        'payment_stats' => 'payment_stats',
+        'services' => 'services',
     ],
      'PLACEHOLDER_TYPE' =>[
         'choose' => '--Choose--',

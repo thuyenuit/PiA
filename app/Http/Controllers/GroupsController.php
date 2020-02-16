@@ -92,7 +92,61 @@ class GroupsController extends Controller
     public function store(GroupSaveRequest $request)
     {
         $request->validated();
-        Group::create($request->all());
+        //Group::create($request->all());
+        $array_per = [];
+        foreach(config('constants.SYSTEM_PERMISSIONS') as $permission => $value)
+        {
+            $per = [];
+
+            if($request['view_sys_permission_'. $value] == 'on')
+            {
+                if($request['create_sys_permission_'. $value] == 'on'
+                    && $request['edit_sys_permission_'. $value] == 'on'
+                    && $request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view', 'create', 'edit', 'delete']);
+                }
+                else if($request['create_sys_permission_'. $value] == 'on'
+                    && $request['edit_sys_permission_'. $value] == 'on'
+                    && !$request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view', 'create', 'edit']);
+                }
+                else if($request['create_sys_permission_'. $value] == 'on'
+                    && !$request['edit_sys_permission_'. $value] == 'on'
+                    && !$request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view', 'create']);
+                }
+                else if(!$request['create_sys_permission_'. $value] == 'on'
+                    && $request['edit_sys_permission_'. $value] == 'on'
+                    && $request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view', 'edit', 'delete']);
+                }
+                else if(!$request['create_sys_permission_'. $value] == 'on'
+                    && !$request['edit_sys_permission_'. $value] == 'on'
+                    && $request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view', 'delete']);
+                }
+                else if(!$request['create_sys_permission_'. $value] == 'on'
+                    && $request['edit_sys_permission_'. $value] == 'on'
+                    && !$request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view', 'edit']);
+                }
+                else if(!$request['create_sys_permission_'. $value] == 'on'
+                    && !$request['edit_sys_permission_'. $value] == 'on'
+                    && !$request['delete_sys_permission_'. $value] == 'on')
+                {
+                    array_push($per, ['view']);
+                }
+            }
+
+            array_push($array_per,  $per);
+            dd($array_per);
+        }
 
         Session::flash('flash_message', __('groups.flash_messages.created'));
         return redirect(route('groups.index'));

@@ -133,93 +133,87 @@
 @foreach($field_groups as $group)
     <div class="section">
         <div class="card card-outline-info m-b-0">
-            <div class="card-header bg-theme" data-toggle="collapse" data-target="#group-{{$group->id}}">
-                <h4 class="m-b-0 text-white">{{ $group->name }}</h4>
+            <div class="card-header bg-theme" data-toggle="collapse" data-target="#group-{{$group['field_group_id']}}">
+                <h4 class="m-b-0 text-white">
+                    @lang('field_groups.locale_key.' . $group['field_group_locale_key'])
+                </h4>
             </div>
-            <div class="card-body form-material row collapse show" id="group-{{$group->id}}">
-                @foreach($fields as $field)
-                    @if($field->field_group_id == $group->id)
-                        <div class="form-group col-md-6 m-t-20">
-
-                            @switch ($field->field_type)
-                                @case (config('constants.FIELD_TYPE')['string'])
-                                @case (config('constants.FIELD_TYPE')['number'])
+            <div class="card-body form-material row collapse show" id="group-{{$group['field_group_id']}}">
+                @foreach($fields->where('field_group_id', '=', $group['field_group_id']) as $field)
+                    <div class="form-group col-md-6 m-t-20">
+                        @switch ($field->field_type)
+                            @case (config('constants.FIELD_TYPE')['string'])
+                            @case (config('constants.FIELD_TYPE')['number'])
                                 <label>
-                                    {{ $field->field_name }}
+                                    @lang('fields.locale_key.' . $field->field_locale_key)
                                     @if($field->mandatory == true)
                                         <span class="text-danger">*</span>
                                     @endif
                                 </label>
-
                                 <input
                                     type="{{ ($field->field_type == config('constants.FIELD_TYPE')['string']) ? 'text' : 'number' }}"
                                     name="{{ $field->field_locale_key }}"
                                     value="{{ $field->value }}" class="form-control"
                                     maxlength="{{ isset($field->setting->max_length) ? $field->setting->max_length : '' }}">
-                                @break
-                                @case (config('constants.FIELD_TYPE')['boolean'])
+                            @break
+                            @case (config('constants.FIELD_TYPE')['boolean'])
 
-                                @break
-                                @case (config('constants.FIELD_TYPE')['date'])
+                            @break
+                            @case (config('constants.FIELD_TYPE')['date'])
 
-                                @break
-                                @case (config('constants.FIELD_TYPE')['single_choice'])
+                            @break
+                            @case (config('constants.FIELD_TYPE')['single_choice'])
                                 <label>
-                                        {{ $field->field_name }}
-                                        @if($field->mandatory == true)
-                                            <span class="text-danger">*</span>
-                                        @endif
-                                    </label>
-                                    
-                                    <div class="input-group field-multi">
+                                    @lang('fields.locale_key.' . $field->field_locale_key)
+                                    @if($field->mandatory == true)
+                                        <span class="text-danger">*</span>
+                                    @endif
+                                </label>
+                                <div class="input-group field-multi">
+                                    <select name="{{$field->field_locale_key}}" class="form-control">
+                                        <option value="">{{config('constants.PLACEHOLDER_TYPE')['choose']}}</option>
+                                        @foreach($field->items as $item => $value)
+                                            @if(!is_null($field->value))
+                                                @if($field->value == $value)
+                                                    <option selected="selected" value="{{$value}}">{{$value}}</option>
+                                                @else
+                                                    <option value="{{$value}}">{{$value}}</option>
+                                                @endif
+                                            @else
+                                                @if($field->default == $value)
+                                                    <option selected="selected" value="{{$value}}">{{$value}}</option>
+                                                @else
+                                                    <option value="{{$value}}">{{$value}}</option>
+                                                @endif
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @break
+                            @case (config('constants.FIELD_TYPE')['multi_choice'])
+                                <label>
+                                    @lang('fields.locale_key.' . $field->field_locale_key)
+                                    @if($field->mandatory == true)
+                                        <span class="text-danger">*</span>
+                                    @endif
+                                </label>
 
-                                    
-                                        <select name="{{$field->field_locale_key}}" class="form-control"> 
-                                            <option value="">{{config('constants.PLACEHOLDER_TYPE')['choose']}}</option>                                     
-                                            @foreach($field->items as $item => $value)
-                                                @if(!is_null($field->value))                                       
-                                                    @if($field->value == $value)                        
-                                                        <option selected="selected" value="{{$value}}">{{$value}}</option>                                                 
-                                                    @else                         
-                                                        <option value="{{$value}}">{{$value}}</option>
-                                                    @endif                                              
-                                                @else                                              
-                                                    @if($field->default == $value)                                                   
-                                                        <option selected="selected" value="{{$value}}">{{$value}}</option>
-                                                    @else
-                                                        <option value="{{$value}}">{{$value}}</option>
-                                                    @endif
-                                                @endif                                               
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                   
-                                @break
-                                @case (config('constants.FIELD_TYPE')['multi_choice'])
-                                    <label>
-                                        {{ $field->field_name }}
-                                        @if($field->mandatory == true)
-                                            <span class="text-danger">*</span>
-                                        @endif
-                                    </label>
-                                    
-                                    <div class="input-group field-multi">
-                                        {!! Form::select($field->field_locale_key . '[]', $field->items, null, [
-                                            'class' => 'form-control select2-multiple', 
-                                            'multiple' => 'multiple'
-                                        ]) !!}
-                                    </div>
-                                @break
-                                @case (config('constants.FIELD_TYPE')['data_source'])
+                                <div class="input-group field-multi">
+                                    {!! Form::select($field->field_locale_key . '[]', $field->items, null, [
+                                        'class' => 'form-control select2-multiple',
+                                        'multiple' => 'multiple'
+                                     ]) !!}
+                                </div>
+                            @break
+                            @case (config('constants.FIELD_TYPE')['data_source'])
 
-                                @break
-                            @endswitch
+                            @break
+                        @endswitch
 
-                            @if($field->mandatory == true)
-                                {!! $errors->first($field->field_locale_key, '<p class="text-danger">:message</p>') !!}
-                            @endif
-                        </div>
-                    @endif
+                        @if($field->mandatory == true)
+                            {!! $errors->first($field->field_locale_key, '<p class="text-danger">:message</p>') !!}
+                        @endif
+                    </div>
                 @endforeach
             </div>
         </div>
